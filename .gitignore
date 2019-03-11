@@ -102,3 +102,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+/**/FIU_trace
+/**/FIU_raw
