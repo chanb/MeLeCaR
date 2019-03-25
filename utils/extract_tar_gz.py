@@ -6,7 +6,7 @@ EXTENSION = '.tar.gz'
 BLKPARSE = '.blkparse'
 
 
-def main(input_dir, output_dir):
+def extract_tar_gz(input_dir, output_dir):
   assert os.path.isdir(input_dir), "The input directory {} does not exist".format(input_dir)
 
   input_dir = input_dir.rstrip("/")
@@ -32,4 +32,4 @@ if __name__ == '__main__':
   parser.add_argument("--input_dir", type=str, help="the directory containing the tar.gz files", required=True)
   parser.add_argument("--output_dir", type=str, help="the directory containing content of the tar.gz files", required=True)
   args = parser.parse_args() 
-  main(args.input_dir, args.output_dir)
+  extract_tar_gz(args.input_dir, args.output_dir)
