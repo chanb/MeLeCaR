@@ -23,8 +23,6 @@ def main(input_data, output_model, batch_size=10, learning_rate=1e-5, num_epochs
 
   def loss(model, inputs, outputs):
     logits = model(inputs)
-    print(logits, outputs)
-    print(tf.losses.mean_squared_error(outputs, logits))
     return tf.losses.mean_squared_error(outputs, logits)
 
   train_loss_results = []
@@ -35,7 +33,7 @@ def main(input_data, output_model, batch_size=10, learning_rate=1e-5, num_epochs
     
     # Training Loop
     for inputs, outputs in dataset:
-      inputs = inputs[:,0,:,:]
+      inputs = inputs[:,-1,:,:]
     
       # Optimize the model
       logits = baseline(inputs)
@@ -45,10 +43,6 @@ def main(input_data, output_model, batch_size=10, learning_rate=1e-5, num_epochs
 
       # Track progress
       epoch_loss_avg.call(loss_value)
-    # print("last loss: {}".format(loss_value))
-    # print("last grad: {}".format(grads))
-    # print("last logits: {}".format(logits))
-    # print(baseline.trainable_variables[0][0])
 
     train_loss_results.append(epoch_loss_avg.result())    
     print("Epoch {}: Loss: {}".format(epoch, epoch_loss_avg.result()))
