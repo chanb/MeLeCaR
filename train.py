@@ -2,9 +2,9 @@ import argparse
 import numpy as np
 import os
 import tensorflow as tf
-from tensorflow import contrib
 
 import config
+from config import tfe
 from utils.parser_util import str2bool
 from utils.dataset_loader import read_from_pkl
 from models.baseline_classifier import Baseline
@@ -41,7 +41,6 @@ def train(train_data, output_dir, model_type, batch_size=10, learning_rate=1e-5,
   # Initialize optimizer
   optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
   global_step = tf.Variable(0)
-  tfe = contrib.eager
 
   # Define loss function
   def loss(model, inputs, targets):
