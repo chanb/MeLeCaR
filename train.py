@@ -14,10 +14,13 @@ def step(model, loss_func, inputs, outputs):
     grads = tape.gradient(loss_value, model.trainable_variables)
   return loss_value, grads
 
-def main(input_data, output_dir, batch_size=10, learning_rate=1e-5, num_epochs=10):
+def main(input_data, output_dir, model_type, batch_size=10, learning_rate=1e-5, num_epochs=10):
+  assert model_type in config.MODEL_TYPES
   dataset = read_from_pkl(input_data).batch(batch_size)
 
-  model = Baseline([None, 30], 10)
+  if model_type == config.BASELINE:
+    model = Baseline([None, 30], 10)
+    
   optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
   global_step = tf.Variable(0)
   tfe = contrib.eager
@@ -63,7 +66,8 @@ if __name__ == '__main__':
   parser.add_argument("--batch_size", type=int, help="batch size")
   parser.add_argument("--learning_rate", type=float, help="learning rate")
   parser.add_argument("--num_epochs", type=int, help="number of epochs")
+  parser.add_argument("--model", type=str, choices=config.MODEL_TYPES, default="baseline", help="the model architecture to train")
   args = parser.parse_args() 
 
-  main(args.input_data, args.output_dir, args.batch_size, args.learning_rate, args.num_epochs)
+  main(args.input_data, args.output_dir, args.model, args.batch_size, args.learning_rate, args.num_epochs)
 
