@@ -6,3 +6,6 @@ print("Eager execution: {}".format(tf.executing_eagerly()))
 
 BASELINE = "baseline"
 MODEL_TYPES = [BASELINE]
+
+EVAL = 0
+TRAIN = 1

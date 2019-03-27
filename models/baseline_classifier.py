@@ -6,9 +6,13 @@ class Baseline(tf.keras.Model):
 
     self.sequential = tf.keras.Sequential([
       tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(50, input_shape=input_dim),
+      tf.keras.layers.Dense(64, input_shape=input_dim),
       tf.keras.layers.ReLU(),
-      tf.keras.layers.Dense(output_dim, input_shape=[None, 50]),
+      tf.keras.layers.Dense(128, input_shape=[None, 64]),
+      tf.keras.layers.ReLU(),
+      tf.keras.layers.Dense(64, input_shape=[None, 128]),
+      tf.keras.layers.ReLU(),
+      tf.keras.layers.Dense(output_dim, input_shape=[None, 64]),
       tf.keras.layers.Activation("sigmoid")
     ])
 
