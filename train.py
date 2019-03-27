@@ -10,6 +10,7 @@ from utils.dataset_loader import read_from_pkl
 from models.baseline_classifier import Baseline
 
 
+# Compute loss and gradient
 def step(model, loss_func, inputs, targets):
   with tf.GradientTape() as tape:
     loss_value = loss_func(model, inputs, targets)
@@ -18,12 +19,14 @@ def step(model, loss_func, inputs, targets):
   return loss_value, grads
 
 
+# Train a model
 def train(train_data, output_dir, model_type, batch_size=10, learning_rate=1e-5, num_epochs=10, validation=False, split_ratio=0.7):
   assert model_type in config.MODEL_TYPES
   assert not validation or 0 <= split_ratio <= 1
 
   dataset, dataset_size, input_dim, output_dim = read_from_pkl(train_data)
 
+  # Split data into training/validation sets
   if validation:
     training_size = int(dataset_size * split_ratio)
     training_set = dataset.take(training_size).batch(batch_size)
@@ -31,18 +34,21 @@ def train(train_data, output_dir, model_type, batch_size=10, learning_rate=1e-5,
   else:
     training_set = dataset.batch(batch_size)
 
+  # Initialize model
   if model_type == config.BASELINE:
     model = Baseline([None, input_dim], output_dim)
 
+  # Initialize optimizer
   optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
   global_step = tf.Variable(0)
   tfe = contrib.eager
 
+  # Define loss function
   def loss(model, inputs, targets):
     logits = model(inputs)
     return tf.losses.sigmoid_cross_entropy(targets, logits)
 
-
+  # Train model
   best_loss = None
   try:
     for epoch in range(num_epochs):
@@ -86,7 +92,7 @@ def train(train_data, output_dir, model_type, batch_size=10, learning_rate=1e-5,
   except KeyboardInterrupt:
     print("Keyboard interrupt... Exiting training")
 
-
+  # Save model
   if not validation:
     print("Saving model to {}...".format(output_dir))
     checkpoint_prefix = os.path.join(output_dir, "ckpt")
