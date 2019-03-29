@@ -6,6 +6,7 @@ print("TensorFlow version: {}".format(tf.__version__))
 print("Eager execution: {}".format(tf.executing_eagerly()))
 
 BASELINE = "baseline"
-MODEL_TYPES = [BASELINE]
+GRU = "gru"
+MODEL_TYPES = [BASELINE, GRU]
 
 ACCURACY = "accuracy"

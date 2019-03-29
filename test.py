@@ -5,12 +5,13 @@ import tensorflow as tf
 from config import *
 from utils.dataset_loader import read_from_pkl
 from models.baseline_classifier import Baseline
+from models.sequence_model import SequenceModel
 from models.utils import get_full_model_name
 
 
 # Test the model
 def test(test_data, model_dir, model_type, model_name):
-  model_full_name = get_full_model_name(model_dir, model_name)
+  model_full_name = get_full_model_name(model_dir, model_name, model_type)
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert os.path.isfile(model_full_name), "{} does not exist".format(model_full_name)
 
@@ -18,8 +19,11 @@ def test(test_data, model_dir, model_type, model_name):
 
   # Initialize model & optimizer, and load weights
   print("Loading {} model from {}...".format(model_type, model_full_name))
+
   if model_type == BASELINE:
     model = Baseline([None, input_dim], output_dim)
+  elif model_type == GRU:
+    model = model = SequenceModel([None, input_dim], output_dim, 100)
   
 
   optimizer = tf.keras.optimizers.SGD()

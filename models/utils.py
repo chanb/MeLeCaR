@@ -9,6 +9,6 @@ def init_bias(out_dim, name=None):
   return tf.Variable(tf.zeros([out_dim]), name=name)
 
 
-def get_full_model_name(model_path, model_name):
+def get_full_model_name(model_path, model_name, model_type):
   model_path = model_path.rstrip("/")
-  return "{}/{}.h5".format(model_path, model_name)
+  return "{}/{}-{}.h5".format(model_path, model_name, model_type)

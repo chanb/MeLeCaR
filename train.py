@@ -7,7 +7,9 @@ from config import *
 from utils.parser_util import str2bool
 from utils.dataset_loader import read_from_pkl
 from models.baseline_classifier import Baseline
+from models.sequence_model import SequenceModel
 from models.utils import get_full_model_name
+
 
 # Train a model
 def train(train_data, output_dir, model_type, model_name, batch_size=10, learning_rate=1e-5, num_epochs=10, split_ratio=0.3):
@@ -23,12 +25,14 @@ def train(train_data, output_dir, model_type, model_name, batch_size=10, learnin
   # Initialize model & optimizer
   if model_type == BASELINE:
     model = Baseline([None, input_dim], output_dim)
+  elif model_type == GRU:
+    model = SequenceModel([None, input_dim], output_dim, 100)
 
   optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
   model.compile(optimizer, loss=tf.losses.sigmoid_cross_entropy, metrics=[ACCURACY])
 
   # Train model
-  model_full_name = get_full_model_name(output_dir, model_name)
+  model_full_name = get_full_model_name(output_dir, model_name, model_type)
   
   try:
     print("Training model...")
