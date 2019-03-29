@@ -10,3 +10,5 @@ GRU = "gru"
 MODEL_TYPES = [BASELINE, GRU]
 
 ACCURACY = "accuracy"
+
+DATASET_EXTENSION = ".pkl"

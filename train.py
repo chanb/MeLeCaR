@@ -29,7 +29,7 @@ def train(train_data, output_dir, model_type, model_name, init_weight=None, batc
   elif model_type == GRU:
     model = SequenceModel([None, input_dim], output_dim, 100)
 
-  optimizer = tf.keras.optimizers.SGD(lr=learning_rate, momentum=0.9)
+  optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
   model.compile(optimizer, loss=tf.losses.sigmoid_cross_entropy, metrics=[ACCURACY])
 
   if init_weight:
