@@ -24,7 +24,7 @@ def train(train_data, output_dir, model_type, model_name, batch_size=10, learnin
   if model_type == BASELINE:
     model = Baseline([None, input_dim], output_dim)
 
-  optimizer = tf.keras.optimizers.SGD(lr=learning_rate)
+  optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
   model.compile(optimizer, loss=tf.losses.sigmoid_cross_entropy, metrics=[ACCURACY])
 
   # Train model
@@ -36,7 +36,7 @@ def train(train_data, output_dir, model_type, model_name, batch_size=10, learnin
     model.fit(inputs, outputs, batch_size=batch_size, epochs=num_epochs, validation_split=split_ratio, callbacks=[mcp_save], shuffle=False)
   except KeyboardInterrupt:
     print("Keyboard interrupt... Exiting training")
-    
+
   # Save model
   if split_ratio == 0:
     print("Saving model to {}...".format(model_full_name))
