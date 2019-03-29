@@ -18,9 +18,10 @@ class Baseline(tf.keras.Model):
 
 
   def call(self, x):
+    x = self._modify_input(x)
     x = self.sequential(x)
     return x
 
 
-  def modify_input(self, input):
-    return input[:, -1, :, :]
+  def _modify_input(self, x):
+    return x[:, -1, :, :]
