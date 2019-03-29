@@ -25,3 +25,7 @@ class Baseline(tf.keras.Model):
 
   def _modify_input(self, x):
     return x[:, -1, :, :]
+
+  
+  # def load_weights(self, pathname):
+  #   self.sequential.load_weights(pathname, by_name=True)

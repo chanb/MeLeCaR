@@ -29,13 +29,14 @@ def train(train_data, output_dir, model_type, model_name, batch_size=10, learnin
 
   # Train model
   model_full_name = get_full_model_name(output_dir, model_name)
+  
   try:
     print("Training model...")
-    mcp_save = tf.keras.callbacks.ModelCheckpoint(model_full_name, save_best_only=True, save_weights_only=True, monitor='val_loss', mode='min')
+    mcp_save = tf.keras.callbacks.ModelCheckpoint(model_full_name, save_best_only=True, save_weights_only=True, monitor='val_loss', mode='min', verbose=1)
     model.fit(inputs, outputs, batch_size=batch_size, epochs=num_epochs, validation_split=split_ratio, callbacks=[mcp_save], shuffle=False)
   except KeyboardInterrupt:
     print("Keyboard interrupt... Exiting training")
-
+    
   # Save model
   if split_ratio == 0:
     print("Saving model to {}...".format(model_full_name))

@@ -16,15 +16,16 @@ def test(test_data, model_dir, model_type, model_name):
 
   inputs, outputs, input_dim, output_dim = read_from_pkl(test_data)
 
-  # Initialize model & optimizer
+  # Initialize model & optimizer, and load weights
   print("Loading {} model from {}...".format(model_type, model_full_name))
   if model_type == BASELINE:
     model = Baseline([None, input_dim], output_dim)
+  
 
   optimizer = tf.keras.optimizers.SGD()
   model.compile(optimizer, loss=tf.losses.sigmoid_cross_entropy, metrics=[ACCURACY])
-  model.set_weights(model_full_name)
-
+  model.build(inputs.shape)
+  model.load_weights(model_full_name)
   model.evaluate(inputs, outputs)
 
 
