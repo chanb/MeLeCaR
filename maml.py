@@ -6,10 +6,13 @@ import numpy as np
 from config import *
 from train import train
 from utils.dataset_loader import read_from_pkl
+from models.baseline_classifier import Baseline
+from models.sequence_model import SequenceModel
+from models.utils import get_full_model_name
 
 
 # Meta-learn using MAML
-def meta_train(training_dir, output_dir, model_type, model_name, task_batch_size, inner_learning_rate, meta_learning_rate, num_epochs):
+def meta_train(training_dir, output_dir, model_type, model_name, task_batch_size, inner_learning_rate, meta_learning_rate, num_epochs, inner_epochs, k_shot):
   assert os.path.isdir(training_dir), "Training directory {} doesn't exist".format(training_dir)
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
 
@@ -21,9 +24,60 @@ def meta_train(training_dir, output_dir, model_type, model_name, task_batch_size
   
   assert 1 <= task_batch_size <= len(workloads), "Specified task batch size is not within the range of [1, {}]".format(len(workloads))
 
+  # Randomly initialize the first weights
+  inputs, outputs, input_dim, output_dim = read_from_pkl(os.path.join(training_dir, workloads[0]))
+
+  if model_type == BASELINE:
+    model = Baseline([None, input_dim], output_dim)
+  elif model_type == GRU:
+    model = SequenceModel([None, input_dim], output_dim, 100)
+
+  model.build(inputs.shape)
+
+  random_init_weight = "meta_weight-0"
+  init_meta_weight = get_full_model_name(output_dir, random_init_weight, model_type)
+
+  print("Initialize weights to {}...".format(init_meta_weight))
+  model.save_weights(init_meta_weight)
+  
+  # Meta-learn loop
   for epoch in range(num_epochs):
-    for task in np.random.choice(workloads, task_batch_size, replace=False):
+    # Task update
+    curr_task_batch = np.random.choice(workloads, task_batch_size, replace=False)
+
+    task_model_name = "meta_weight-{}"
+    init_meta_weight = get_full_model_name(output_dir, task_model_name.format(epoch), model_type)
+
+    assert os.path.isfile(init_meta_weight), "{} weight file should exist".format(init_meta_weight)
+
+    # Inner loop, sample batch of tasks
+    for task in curr_task_batch:
       inputs, outputs, input_dim, output_dim = read_from_pkl(os.path.join(training_dir, task))
+
+      #TODO: Modify so we sample k_shot consecutive inputs/output pairs
+
+      # Recompile the model
+      optimizer = tf.keras.optimizers.Adam(lr=inner_learning_rate)
+      model.compile(optimizer, loss=tf.losses.sigmoid_cross_entropy, metrics=[ACCURACY])
+      model.build(inputs.shape)
+      model.load_weights(init_meta_weight)
+
+      # Train model for each task
+      model.fit(inputs, outputs, batch_size=k_shot, epochs=inner_epochs, shuffle=False)
+
+      # Save new weights per task
+      new_weight = get_full_model_name(output_dir, "{}-{}".format(task, epoch), model_type)
+      print("Saving task specific weights to {}...".format(new_weight))
+      model.save_weights(new_weight)
+
+    # Meta-train
+    
+
+    # Save new meta weights
+    new_meta_weight = get_full_model_name(output_dir, "meta_weight-{}".format(epoch + 1), model_type)
+    print("Saving meta-weights to {}...".format(new_meta_weight))
+    model.save_weights(new_meta_weight)
+
 
 
 if __name__ == "__main__":
@@ -37,8 +91,9 @@ if __name__ == "__main__":
   parser.add_argument("--inner_learning_rate", type=float, help="learning rate for inner loop", default=1e-3)
   parser.add_argument("--meta_learning_rate", type=float, help="learning rate for outer loop", default=1e-3)
   parser.add_argument("--num_epochs", type=int, help="number of epochs", default=100)
+  parser.add_argument("--inner_epochs", type=int, help="number of epochs for task training", default=5)
   parser.add_argument("--k_shot", type=int, help="number of datapoints to sample from for each task", default=5)
 
   args = parser.parse_args() 
 
-  meta_train(args.training_dir, args.output_dir, args.model_type, args.model_name, args.task_batch_size, args.inner_learning_rate, args.meta_learning_rate, args.num_epochs)
+  meta_train(args.training_dir, args.output_dir, args.model_type, args.model_name, args.task_batch_size, args.inner_learning_rate, args.meta_learning_rate, args.num_epochs, args.inner_epochs, args.k_shot)
