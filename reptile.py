@@ -36,8 +36,7 @@ def meta_train(training_dir, output_dir, model_type, model_name, task_batch_size
   shape = inputs.shape
   model.build(shape)
 
-  random_init_weight = "meta_weight-0"
-  init_meta_weight = get_full_model_name(output_dir, random_init_weight, model_type)
+  init_meta_weight = get_full_model_name(output_dir, "{}-meta_weight-0".format(model_name), model_type)
 
   print("Initialize weights to {}...".format(init_meta_weight))
   model.save_weights(init_meta_weight)
@@ -48,8 +47,8 @@ def meta_train(training_dir, output_dir, model_type, model_name, task_batch_size
     # Task update
     curr_task_batch = np.random.choice(workloads, task_batch_size, replace=False)
 
-    task_model_name = "meta_weight-{}"
-    init_meta_weight = get_full_model_name(output_dir, task_model_name.format(epoch), model_type)
+    task_model_name = "{}-meta_weight-{}"
+    init_meta_weight = get_full_model_name(output_dir, task_model_name.format(model_name, epoch), model_type)
     new_weights = []
 
     assert os.path.isfile(init_meta_weight), "{} weight file should exist".format(init_meta_weight)
@@ -77,7 +76,7 @@ def meta_train(training_dir, output_dir, model_type, model_name, task_batch_size
       model.fit(inputs[k_samples:k_samples + k_shot], outputs[k_samples:k_samples + k_shot], batch_size=k_shot, epochs=inner_epochs, shuffle=False)
 
       # Save new weights per task
-      new_weight = get_full_model_name(output_dir, "{}-{}".format(task, epoch), model_type)
+      new_weight = get_full_model_name(output_dir, "{}-{}-{}".format(model_name, task, epoch), model_type)
       print("Saving task specific weights to {}...".format(new_weight))
       model.save_weights(new_weight)
       new_weights.append(model.get_weights())
@@ -109,7 +108,7 @@ def meta_train(training_dir, output_dir, model_type, model_name, task_batch_size
     model.set_weights(meta_weights)
 
     # Save new meta weights
-    new_meta_weight = get_full_model_name(output_dir, "meta_weight-{}".format(epoch + 1), model_type)
+    new_meta_weight = get_full_model_name(output_dir, "{}-meta_weight-{}".format(model_name, epoch + 1), model_type)
     print("Saving meta-weights to {}...".format(new_meta_weight))
     model.save_weights(new_meta_weight)
 
