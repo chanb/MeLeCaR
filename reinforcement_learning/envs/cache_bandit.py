@@ -22,6 +22,7 @@ class CacheBandit(gym.Env):
                   'blockSize', 'readOrWrite', 'bdMajor', 'bdMinor', 'hash']
 
     self._stream = df['blockNo'].tolist()[450:550]
+    self._stream = [request / max(self._stream) for request in self._stream]
     self._size = len(self._stream)
     self._counter = 0
 
@@ -44,7 +45,8 @@ class CacheBandit(gym.Env):
       recency.append(recency_dict[block])
       frequency.append(self._lfu[block])
 
-    block_num = self._cache[:]
+    block_num = np.expand_dims(np.array(self._cache), axis=1)
+
     
     if len(recency) < self.cache_size:
         for i in range(0, self.cache_size - len(recency)):
@@ -54,9 +56,12 @@ class CacheBandit(gym.Env):
     
     # Columns: recency, frequency, block number
     # Row: cache location
-    raw_input = np.column_stack((recency, frequency, block_num))
+    raw = np.column_stack((recency, frequency))
+    normalized = normalize(raw, axis=0)
+
+    final_state = np.append(normalized, block_num, axis=1)
     
-    return raw_input#normalize(raw_input, axis=0)
+    return final_state
 
 
   def _fill_until_evict(self):
