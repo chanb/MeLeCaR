@@ -3,6 +3,7 @@ import numpy as np
 import gym
 import multiprocessing as mp
 from helper.envs.multiprocessing_env import SubprocVecEnv
+from config import *
 
 EPS = 1e-8
 
@@ -16,8 +17,7 @@ def make_env(env_name):
 
 # This samples from the current environment using the provided model
 class Sampler():
-  def __init__(self, device, model, env_name, num_actions, deterministic=False, gamma=0.99, tau=0.3, num_workers=mp.cpu_count() - 1, evaluate=False):
-    self.device = device
+  def __init__(self, model, env_name, num_actions, deterministic=False, gamma=0.99, tau=0.3, num_workers=mp.cpu_count() - 1, evaluate=False):
     self.model = model
     self.env_name = env_name
     self.num_actions = num_actions
@@ -90,8 +90,8 @@ class Sampler():
     self.log_probs.append(log_prob)
     self.states.append(state.unsqueeze(0))
     self.actions.append(action.unsqueeze(0))
-    self.rewards.append(torch.Tensor(reward).unsqueeze(1).to(self.device))
-    self.masks.append(torch.Tensor(1 - done).unsqueeze(1).to(self.device))
+    self.rewards.append(torch.Tensor(reward).unsqueeze(1).to(DEVICE))
+    self.masks.append(torch.Tensor(1 - done).unsqueeze(1).to(DEVICE))
     self.values.append(value)
     self.hidden_states.append(hidden_state)
 
@@ -102,6 +102,7 @@ class Sampler():
     return torch.from_numpy(states), torch.zeros([self.num_workers, ]), torch.from_numpy(np.full((self.num_workers, ), -1)), torch.zeros([self.num_workers, ])
 
 
+  # TODO: Modify this
   # Generate the state vector for RNN
   def generate_state_vector(self, done, reward, num_actions, action, state):
     done_entry = done.float().unsqueeze(1)
@@ -116,7 +117,7 @@ class Sampler():
     
     state = torch.cat((state, action_vector, reward_entry, done_entry), 1)
     state = state.unsqueeze(0)
-    return state.to(self.device)
+    return state.to(DEVICE)
 
 
   # Exploit the best action
@@ -139,7 +140,7 @@ class Sampler():
 
     hidden_state = last_hidden_state
     if last_hidden_state is None:
-      hidden_state = self.model.init_hidden_state(self.num_workers).to(self.device)
+      hidden_state = self.model.init_hidden_state(self.num_workers).to(DEVICE)
 
     # We sample batchsize amount of data
     for i in range(batchsize):
@@ -168,7 +169,7 @@ class Sampler():
       state = next_state
       state = torch.from_numpy(state).float()
       
-      hidden_state = next_hidden_state.to(self.device)
+      hidden_state = next_hidden_state.to(DEVICE)
 
       # Grab hidden state for the extra information
       if all(done):
