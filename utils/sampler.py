@@ -48,6 +48,11 @@ class Sampler():
     return returns
 
 
+  # Reset environments
+  def reset_envs(self):
+    self.envs.reset()
+
+
   # Set the current task
   def set_task(self, task):
     tasks = [task for _ in range(self.num_workers)]

@@ -15,6 +15,9 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, gamma, tau, t
   if task_name == CASA:
     task_name = "Cache-Bandit-C{}-casa-v0".format(num_actions)
 
+  env = gym.make(task_name)
+  task = gym.unwrapped.sample_tasks(1)
+
   # Create the model
   if (model_type == GRU):
     model = GRUActorCritic(num_actions, num_feature)
