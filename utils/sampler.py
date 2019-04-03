@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import gym
 import multiprocessing as mp
-from helper.envs.multiprocessing_env import SubprocVecEnv
+from rl_envs.multiprocessing_env import SubprocVecEnv
 from config import *
 
 EPS = 1e-8
@@ -109,19 +109,25 @@ class Sampler():
 
   # TODO: Modify this
   # Generate the state vector for RNN
-  def generate_state_vector(self, done, reward, num_actions, action, state):
-    done_entry = done.float().unsqueeze(1)
-    reward_entry = reward.float().unsqueeze(1)
-    action_vector = torch.zeros([self.num_workers, num_actions])
+  # def generate_state_vector(self, done, reward, num_actions, action, state):
+  #   done_entry = done.float().unsqueeze(1)
+  #   reward_entry = reward.float().unsqueeze(1)
+  #   action_vector = torch.zeros([self.num_workers, num_actions])
 
-    # Try to speed up while having some check
-    if all(action > -1):
-      action_vector.scatter_(1, action.cpu().unsqueeze(1), 1)
-    elif any(action > -1):
-      assert False, 'All processes should be at the same step'
+  #   # Try to speed up while having some check
+  #   if all(action > -1):
+  #     action_vector.scatter_(1, action.cpu().unsqueeze(1), 1)
+  #   elif any(action > -1):
+  #     assert False, 'All processes should be at the same step'
     
-    state = torch.cat((state, action_vector, reward_entry, done_entry), 1)
-    state = state.unsqueeze(0)
+  #   state = torch.cat((state, action_vector, reward_entry, done_entry), 1)
+  #   state = state.unsqueeze(0)
+  #   return state.to(DEVICE)
+
+
+  def generate_state_vector(self, done, reward, num_actions, action, state):    
+    state = state.reshape(1, 1, num_actions * 3)
+    print(type(state))
     return state.to(DEVICE)
 
 
@@ -142,6 +148,7 @@ class Sampler():
   # Sample batchsize amount of moves
   def sample(self, batchsize, last_hidden_state=None):
     state, reward, action, done = self.reset_traj()
+    print("INITIAL STATE: {}".format(state.shape))
 
     hidden_state = last_hidden_state
     if last_hidden_state is None:
@@ -151,6 +158,7 @@ class Sampler():
     for i in range(batchsize):
       # Set the vector state
       state = self.generate_state_vector(done, reward, self.num_actions, action, state)
+      print("Modified STATE: {}".format(state.shape))
 
       # Get information from model and take action
       with torch.no_grad():

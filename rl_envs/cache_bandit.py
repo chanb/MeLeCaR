@@ -1,15 +1,16 @@
 import numpy as np
 import pandas as pd
+import random
 from sklearn.preprocessing import normalize
 from collections import defaultdict
 
 import gym
 from gym import spaces
 
-location_prefix = "envs/"
+location_prefix = "rl_envs/"
 
 class CacheBandit(gym.Env):
-  def __init__(self, cache_size, workload, max_len):
+  def __init__(self, cache_size, workload):
     self.cache_size = cache_size
     self.workload = location_prefix + workload
 
@@ -45,14 +46,16 @@ class CacheBandit(gym.Env):
       recency.append(recency_dict[block])
       frequency.append(self._lfu[block])
 
-    block_num = np.expand_dims(np.array(self._cache), axis=1)
-
+    block_num = self._cache[:]
     
     if len(recency) < self.cache_size:
-        for i in range(0, self.cache_size - len(recency)):
+        for _ in range(0, self.cache_size - len(recency)):
             recency.append(0)
             frequency.append(0)
             block_num.append(0)
+
+    
+    block_num = np.expand_dims(np.array(block_num), axis=1)
     
     # Columns: recency, frequency, block number
     # Row: cache location
@@ -64,29 +67,34 @@ class CacheBandit(gym.Env):
     return final_state
 
 
+  # Find the next time where we need to perform an eviction
   def _fill_until_evict(self):
     needs_evict = False
+
     while not needs_evict and self._counter < self._size:
       request_block = self._stream[self._counter]
       self._lfu[request_block] += 1
 
       if request_block in self._cache:
+        # Cache Hit
         self._lru.remove(request_block)
         self._lru.append(request_block)
         self._counter += 1
       else:
+        # Cache Miss
         if len(self._cache) == self.cache_size:
           needs_evict = True
-          # self._next_evict_time = self._counter
         else:
+          # Cache is not full
           self._cache.append(request_block)
           self._lru.append(request_block)
           self._counter += 1
     
 
+  # Random starting point
   def reset(self):
-    self._next_evict_time = 0
-    self._counter = 0
+    self._counter = random.randint(0, self._size - self.cache_size)
+    self._next_evict_time = self._counter
     self._lfu = defaultdict(int)
     self._lru = []
     self._cache = []

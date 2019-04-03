@@ -1,7 +1,10 @@
 import argparse
 import torch
+import torch.optim as optim
+
 from config import *
 from rl_algos.reinforce import Reinforce
+from rl_models.gru import GRUActorCritic
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
@@ -14,9 +17,6 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, gamma, tau, t
   # Setup environment
   if task_name == CASA:
     task_name = "Cache-Bandit-C{}-casa-v0".format(num_actions)
-
-  env = gym.make(task_name)
-  task = gym.unwrapped.sample_tasks(1)
 
   # Create the model
   if (model_type == GRU):
@@ -45,8 +45,8 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, gamma, tau, t
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument("--algo", help="the rl algorithm to use", default=str, choices=ALGOS, default="reinforce")
-  parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="baseline", help="the model architecture to train")
+  parser.add_argument("--algo", help="the rl algorithm to use", type=str, choices=ALGOS, default="reinforce")
+  parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="gru", help="the model architecture to train")
   parser.add_argument("--batch_size", type=int, help="batch size", default=128)
   parser.add_argument("--learning_rate", type=float, help="learning rate", default=1e-3)
   parser.add_argument('--gamma', type=float, default=0.99, help='discount factor (default: 0.99)')

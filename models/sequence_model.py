@@ -7,7 +7,9 @@ class SequenceModel(tf.keras.Model):
     self.sequential.add(tf.keras.layers.GRU(hidden_unit, input_shape=input_dim))
     self.sequential.add(tf.keras.layers.Dense(100, input_shape=[None, hidden_unit]))
     self.sequential.add(tf.keras.layers.ReLU())
-    self.sequential.add(tf.keras.layers.Dense(output_dim, input_shape=[None, 100]))
+    self.sequential.add(tf.keras.layers.Dense(50, input_shape=[None, 100]))
+    self.sequential.add(tf.keras.layers.ReLU())
+    self.sequential.add(tf.keras.layers.Dense(output_dim, input_shape=[None, 50]))
     self.sequential.add(tf.keras.layers.Activation("sigmoid"))
     
 
