@@ -40,7 +40,7 @@ def meta_train(training_dir, output_dir, model_type, model_name, task_batch_size
 
   print("Initialize weights to {}...".format(init_meta_weight))
   model.save_weights(init_meta_weight)
-  
+  meta_weights = None
   # Meta-learn loop
   for epoch in range(num_epochs):
     print("EPOCH {} =====================".format(epoch))
@@ -71,9 +71,16 @@ def meta_train(training_dir, output_dir, model_type, model_name, task_batch_size
       model.compile(optimizer, loss=tf.losses.sigmoid_cross_entropy, metrics=[ACCURACY])
       model.build(inputs.shape)
       model.load_weights(init_meta_weight)
+      if meta_weights:
+        print(meta_weights[0][0][:3])
+        print(model.get_weights()[0][0][:3])
 
       # Train model for each task
       model.fit(inputs[k_samples:k_samples + k_shot], outputs[k_samples:k_samples + k_shot], batch_size=k_shot, epochs=inner_epochs, shuffle=False)
+
+      if meta_weights:
+        print(meta_weights[0][0][:3])
+        print(model.get_weights()[0][0][:3])
 
       # Save new weights per task
       new_weight = get_full_model_name(output_dir, "{}-{}-{}".format(model_name, task, epoch), model_type)
@@ -122,11 +129,11 @@ if __name__ == "__main__":
   parser.add_argument("--model_name", type=str, help="the saved model name", required=True)
   parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="baseline", help="the model architecture to train")
 
-  parser.add_argument("--task_batch_size", type=int, help="batch size of tasks", default=10)
-  parser.add_argument("--inner_learning_rate", type=float, help="learning rate for inner loop", default=1e-4)
-  parser.add_argument("--meta_learning_rate", type=float, help="learning rate for outer loop", default=1e-5)
+  parser.add_argument("--task_batch_size", type=int, help="batch size of tasks", default=3)
+  parser.add_argument("--inner_learning_rate", type=float, help="learning rate for inner loop", default=1e-3)
+  parser.add_argument("--meta_learning_rate", type=float, help="learning rate for outer loop", default=1e-3)
   parser.add_argument("--num_epochs", type=int, help="number of epochs", default=100)
-  parser.add_argument("--inner_epochs", type=int, help="number of epochs for task training", default=1)
+  parser.add_argument("--inner_epochs", type=int, help="number of epochs for task training", default=10)
   parser.add_argument("--k_shot", type=int, help="number of datapoints to sample from for each task", default=5)
 
   args = parser.parse_args() 
