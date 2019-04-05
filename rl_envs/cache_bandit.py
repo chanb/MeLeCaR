@@ -11,6 +11,7 @@ location_prefix = "rl_envs/"
 
 class CacheBandit(gym.Env):
   def __init__(self, cache_size, workload, max_requests=-1):
+    print("WORKLOAD: {} CACHE SIZE: {} MAX_REQUESTS: {}".format(workload, cache_size, max_requests))
     self._hit = 0
     self.cache_size = cache_size
     self.workload = location_prefix + workload
@@ -23,7 +24,7 @@ class CacheBandit(gym.Env):
     df.columns = ['timestamp','pid','pname','blockNo', \
                   'blockSize', 'readOrWrite', 'bdMajor', 'bdMinor', 'hash']
 
-    self._stream = df['blockNo'].tolist()[:100000]
+    self._stream = df['blockNo'].tolist()[:max_requests]
     self._stream = [request / max(self._stream) for request in self._stream]
     self._size = len(self._stream)
     self._counter = 0
