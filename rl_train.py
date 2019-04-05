@@ -4,12 +4,14 @@ import torch.optim as optim
 
 from config import *
 from rl_algos.reinforce import Reinforce
-from rl_models.gru import GRUActorCritic
+from rl_algos.a2c import AdvantageActorCritic
+from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def train(algo, model_type, batch_size, learning_rate, num_epochs, gamma, tau, task_name, num_actions):
+def train(algo, model_type, batch_size, learning_rate, num_epochs, gamma, tau, task_name, num_actions, critic_coef, actor_coef, entropy_coef):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
+  assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
 
   num_feature = num_actions * 3
@@ -19,17 +21,21 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, gamma, tau, t
     task_name = "Cache-Bandit-C{}-casa-v0".format(num_actions)
 
   # Create the model
-  if (model_type == GRU):
+  if (model_type == GRU and algo == REINFORCE):
+    model = GRUPolicy(num_actions, num_feature)
+    # Set the optimizer
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    agent = Reinforce(model, optimizer)
+  elif(model_type == GRU and algo == A2C):
     model = GRUActorCritic(num_actions, num_feature)
+    # Set the optimizer
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    agent = AdvantageActorCritic(model, optimizer, critic_coef, actor_coef, entropy_coef)
 
   model = model.to(DEVICE)
 
-  # Set the optimizer
-  optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
   # Setup sampler
   sampler = Sampler(model, task_name, num_actions, deterministic=False, gamma=gamma, tau=tau, num_workers=1)
-  agent = Reinforce(model, optimizer)
   
   for epoch in range(num_epochs):
     print("EPOCH {} ==========================================".format(epoch))
@@ -55,10 +61,13 @@ if __name__ == '__main__':
   parser.add_argument('--tau', type=float, default=1, help='GAE parameter (default: 1)')
   parser.add_argument('--baseline', type=float, default=False, help='whether or not to use baseline')
 
+  parser.add_argument("--critic_coef", type=float, default=0.5, help="the contribution of critic loss")
+  parser.add_argument("--actor_coef", type=float, default=0.5, help="the contribution of actor loss")
+  parser.add_argument("--entropy_coef", type=float, default=0.001, help="the contribution of entropy")
 
   parser.add_argument("--task_name", type=str, help="the task to learn", default="casa", choices=TASKS)
   parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30)
 
   args = parser.parse_args()
 
-  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.gamma, args.tau, args.task_name, args.num_actions)
+  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.gamma, args.tau, args.task_name, args.num_actions, args.critic_coef, args.actor_coef, args.entropy_coef)

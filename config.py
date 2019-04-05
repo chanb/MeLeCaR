@@ -6,7 +6,8 @@ MODEL_TYPES = [BASELINE, GRU]
 
 
 REINFORCE = "reinforce"
-ALGOS = [REINFORCE]
+A2C = "a2c"
+ALGOS = [REINFORCE, A2C]
 
 
 CASA = "casa"

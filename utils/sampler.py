@@ -70,19 +70,21 @@ class Sampler():
     self.returns = []
     self.advantages = []
     self.hidden_states = []
+    self.entropies = []
     self.reset_evaluate()
 
 
   # Concatenate storage for more accessibility
   def concat_storage(self):
     # Store in better format
-    self.returns = torch.cat(self.returns)
-    self.values = torch.cat(self.values)
-    self.log_probs = torch.cat(self.log_probs)
+    self.returns = torch.cat(self.returns).to(DEVICE)
+    self.values = torch.cat(self.values).to(DEVICE)
+    self.log_probs = torch.cat(self.log_probs).to(DEVICE)
     self.states = torch.cat(self.states)
     self.actions = torch.cat(self.actions)
+    self.entropies = torch.cat(self.entropies).to(DEVICE)
     self.advantages = self.returns - self.values
-    self.advantages = (self.advantages - self.advantages.mean()) / (self.advantages.std() + EPS)
+    self.advantages = (self.advantages - self.advantages.mean()) / (self.advantages.std() + EPS).to(DEVICE)
 
 
   # Concatenate hidden states
@@ -91,13 +93,14 @@ class Sampler():
 
 
   # Insert a sample into the storage
-  def insert_storage(self, log_prob, state, action, reward, done, value, hidden_state):
+  def insert_storage(self, log_prob, state, action, reward, done, value, hidden_state, entropy):
     self.log_probs.append(log_prob)
     self.states.append(state.unsqueeze(0))
     self.actions.append(action.unsqueeze(0))
     self.rewards.append(torch.Tensor(reward).unsqueeze(1).to(DEVICE))
     self.masks.append(torch.Tensor(1 - done).unsqueeze(1).to(DEVICE))
     self.values.append(value)
+    self.entropies.append(entropy)
     self.hidden_states.append(hidden_state)
 
 
@@ -172,7 +175,7 @@ class Sampler():
       done = torch.from_numpy(done).float()
         
       # Store the information
-      self.insert_storage(log_prob.unsqueeze(0), state, action.unsqueeze(0), reward, done, value, hidden_state)
+      self.insert_storage(log_prob.unsqueeze(0), state, action.unsqueeze(0), reward, done, value, hidden_state, torch.tensor(dist.entropy().mean()).unsqueeze(0))
       self.save_evaluate(action, state, reward)
 
       # Update to the next value

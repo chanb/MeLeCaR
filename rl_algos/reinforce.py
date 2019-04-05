@@ -8,14 +8,16 @@ class Reinforce:
 
   def update(self, sampler):
     log_probs = sampler.log_probs
-    advantages = sampler.advantages
+    returns = sampler.returns
 
     policy_loss = []
-    for log_prob, advantage in zip(log_probs, advantages):
-      policy_loss.append(-log_prob * advantage)
+    for log_prob, return_t in zip(log_probs, returns):
+      policy_loss.append(-log_prob * return_t)
 
-    self.optimizer.zero_grad()
     policy_loss = torch.cat(policy_loss).sum()
+    print(policy_loss)
+    
+    self.optimizer.zero_grad()
     policy_loss.backward()
     self.optimizer.step()
   

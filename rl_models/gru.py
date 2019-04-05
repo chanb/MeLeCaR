@@ -25,3 +25,26 @@ class GRUActorCritic(nn.Module):
 
   def init_hidden_state(self, batchsize=1):
     return torch.zeros([1, batchsize, self.hidden_size])
+
+
+class GRUPolicy(nn.Module):
+  def __init__(self, output_size, input_size, hidden_size=256):
+    super(GRUPolicy, self).__init__()
+    self.is_recurrent = True
+    self.hidden_size = hidden_size
+
+    self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size)
+    self.relu1 = nn.ReLU()
+    self.policy = nn.Linear(hidden_size, output_size)
+    self.apply(weight_init)
+
+  def forward(self, x, h):
+    x, h = self.gru(x, h)
+    x = self.relu1(x)
+    dist = self.policy(x).squeeze(0)
+    return Categorical(logits=dist), self.val, h
+
+  def init_hidden_state(self, batch_size=1):
+    self.batch_size = batch_size
+    self.val = torch.zeros(self.batch_size, 1)
+    return torch.zeros([1, batch_size, self.hidden_size])
