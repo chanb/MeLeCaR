@@ -126,8 +126,7 @@ class Sampler():
 
 
   def generate_state_vector(self, done, reward, num_actions, action, state):    
-    state = state.reshape(1, 1, num_actions * 3)
-    print(type(state))
+    state = state.reshape(1, 1, num_actions * 3).float()
     return state.to(DEVICE)
 
 
@@ -148,7 +147,6 @@ class Sampler():
   # Sample batchsize amount of moves
   def sample(self, batchsize, last_hidden_state=None):
     state, reward, action, done = self.reset_traj()
-    print("INITIAL STATE: {}".format(state.shape))
 
     hidden_state = last_hidden_state
     if last_hidden_state is None:
@@ -158,17 +156,16 @@ class Sampler():
     for i in range(batchsize):
       # Set the vector state
       state = self.generate_state_vector(done, reward, self.num_actions, action, state)
-      print("Modified STATE: {}".format(state.shape))
 
       # Get information from model and take action
-      with torch.no_grad():
-        dist, value, next_hidden_state = self.model(state, hidden_state)
+      # with torch.no_grad():
+      dist, value, next_hidden_state = self.model(state, hidden_state)
       
       # Decide if we should exploit all the time
       action = self.get_next_action(dist)
 
       log_prob = dist.log_prob(action)
-      next_state, reward, done, _ = self.envs.step(action.cpu().numpy())
+      next_state, reward, done, info = self.envs.step(action.cpu().numpy())
       done = done.astype(int)
 
       reward = torch.from_numpy(reward).float()
@@ -186,11 +183,10 @@ class Sampler():
 
       # Grab hidden state for the extra information
       if all(done):
-        state = self.generate_state_vector(done, reward, self.num_actions, action, state)
-
-        with torch.no_grad():
-          _, _, hidden_state = self.model(state, hidden_state)
+        info = info[0]
+        print("All requests are processed. Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"], info["hit"]/info["timestep"]))
         state, reward, action, done = self.reset_traj()
+        hidden_state = self.model.init_hidden_state()
       elif any(done):
         # This is due to environment setting
         # TODO: Allow different trajectory lengths

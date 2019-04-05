@@ -10,7 +10,8 @@ from gym import spaces
 location_prefix = "rl_envs/"
 
 class CacheBandit(gym.Env):
-  def __init__(self, cache_size, workload):
+  def __init__(self, cache_size, workload, max_requests=-1):
+    self._hit = 0
     self.cache_size = cache_size
     self.workload = location_prefix + workload
 
@@ -22,7 +23,7 @@ class CacheBandit(gym.Env):
     df.columns = ['timestamp','pid','pname','blockNo', \
                   'blockSize', 'readOrWrite', 'bdMajor', 'bdMinor', 'hash']
 
-    self._stream = df['blockNo'].tolist()[450:550]
+    self._stream = df['blockNo'].tolist()[:100000]
     self._stream = [request / max(self._stream) for request in self._stream]
     self._size = len(self._stream)
     self._counter = 0
@@ -80,6 +81,7 @@ class CacheBandit(gym.Env):
         self._lru.remove(request_block)
         self._lru.append(request_block)
         self._counter += 1
+        self._hit += 1
       else:
         # Cache Miss
         if len(self._cache) == self.cache_size:
@@ -93,7 +95,8 @@ class CacheBandit(gym.Env):
 
   # Random starting point
   def reset(self):
-    self._counter = random.randint(0, self._size - self.cache_size)
+    self._hit = 0
+    self._counter = 0#random.randint(0, self._size - self.cache_size)
     self._next_evict_time = self._counter
     self._lfu = defaultdict(int)
     self._lru = []
@@ -120,5 +123,5 @@ class CacheBandit(gym.Env):
     curr_timestep = self._counter
     
     self._fill_until_evict()
-    return self._compute_state(), (self._counter - curr_timestep), self._counter == self._size, {"workload": self.workload, "timestep": self._counter, "curr": curr_timestep}
+    return self._compute_state(), (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit}
 

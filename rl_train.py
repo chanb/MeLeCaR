@@ -37,6 +37,7 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, gamma, tau, t
     sampler.last_hidden_state = None
 
     sampler.sample(batch_size)
+    sampler.concat_storage()
     agent.update(sampler)
 
   sampler.envs.close()
