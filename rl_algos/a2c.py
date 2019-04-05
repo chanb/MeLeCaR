@@ -23,9 +23,9 @@ class AdvantageActorCritic:
     critic_loss = advantages.pow(2).mean()
 
     mean_entropy = entropies.mean()
-    
+
     loss = self.critic_coef * critic_loss + self.actor_coef * actor_loss - self.entropy_coef * mean_entropy
-    print(loss)
+    print("ACTOR LOSS: {} CRITIC LOSS: {} ENTROPY: {} TOTAL LOSS: {}".format(actor_loss, critic_loss, mean_entropy, loss))
 
     self.optimizer.zero_grad()
     loss.backward()
