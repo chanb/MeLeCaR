@@ -184,7 +184,7 @@ class Sampler():
       # Grab hidden state for the extra information
       if all(done):
         info = info[0]
-        print("All requests are processed. Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"], info["hit"]/info["timestep"]))
+        print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"], info["hit"]/info["timestep"]))
         state, reward, action, done = self.reset_traj()
         hidden_state = self.model.init_hidden_state()
       elif any(done):
@@ -197,6 +197,9 @@ class Sampler():
     ########################################################################
 
     self.last_hidden_state = hidden_state
+
+    info = info[0]
+    print("Leftover requests - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"], info["hit"]/info["timestep"]))
 
     # Compute the return
     state = self.generate_state_vector(done, reward, self.num_actions, action, state)
