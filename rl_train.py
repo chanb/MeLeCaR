@@ -9,7 +9,7 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def train(algo, model_type, batch_size, learning_rate, num_epochs, gamma, tau, task_name, num_actions, critic_coef, actor_coef, entropy_coef):
+def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, gamma, tau, task_name, num_actions, critic_coef, actor_coef, entropy_coef):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
@@ -42,7 +42,7 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, gamma, tau, t
     sampler.reset_storage()
     sampler.last_hidden_state = None
 
-    sampler.sample(batch_size)
+    sampler.sample(batch_size, stop_at_done=full_traj)
     sampler.concat_storage()
     agent.update(sampler)
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
   parser.add_argument('--gamma', type=float, default=0.99, help='discount factor (default: 0.99)')
   parser.add_argument("--num_epochs", type=int, help="number of epochs", default=100)
   parser.add_argument('--tau', type=float, default=1, help='GAE parameter (default: 1)')
-  parser.add_argument('--baseline', type=float, default=False, help='whether or not to use baseline')
+  parser.add_argument('--full_traj', type=str2bool, default=True, help='whether or not to sample complete trajectories')
 
   parser.add_argument("--critic_coef", type=float, default=0.5, help="the contribution of critic loss")
   parser.add_argument("--actor_coef", type=float, default=0.5, help="the contribution of actor loss")
@@ -70,4 +70,4 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.gamma, args.tau, args.task_name, args.num_actions, args.critic_coef, args.actor_coef, args.entropy_coef)
+  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.full_traj, args.gamma, args.tau, args.task_name, args.num_actions, args.critic_coef, args.actor_coef, args.entropy_coef)
