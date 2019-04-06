@@ -1,6 +1,7 @@
 import argparse
 import torch
 import torch.optim as optim
+import os
 
 from config import *
 from rl_algos.reinforce import Reinforce
@@ -9,7 +10,7 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, gamma, tau, task_name, num_actions, critic_coef, actor_coef, entropy_coef):
+def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, gamma, tau, task_name, num_actions, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
@@ -38,7 +39,10 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, ga
   sampler = Sampler(model, task_name, num_actions, deterministic=False, gamma=gamma, tau=tau, num_workers=1)
 
   print("Stop after full trajectory is completed: {}".format(full_traj))
-  
+  print("Output Directory: {}".format(output_dir))
+  if not os.path.isdir(output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+
   for epoch in range(num_epochs):
     print("EPOCH {} ==========================================".format(epoch))
     sampler.reset_storage()
@@ -47,6 +51,11 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, ga
     sampler.sample(batch_size, stop_at_done=full_traj)
     sampler.concat_storage()
     agent.update(sampler)
+
+    out_file = '{}/{}_{}.pkl'.format(output_dir.rstrip("/"), output_prefix, epoch)
+    print("Saving model as {}".format(out_file))
+    torch.save(model, out_file)
+    
 
   sampler.envs.close()
 
@@ -70,6 +79,9 @@ if __name__ == '__main__':
   parser.add_argument("--task_name", type=str, help="the task to learn", default="casa", choices=TASKS)
   parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30)
 
+  parser.add_argument("--output_dir", type=str, help="the directory to save the models", required=True)
+  parser.add_argument("--output_prefix", type=str, help="the model prefix to save", required=True)
+
   args = parser.parse_args()
 
-  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.full_traj, args.gamma, args.tau, args.task_name, args.num_actions, args.critic_coef, args.actor_coef, args.entropy_coef)
+  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.full_traj, args.gamma, args.tau, args.task_name, args.num_actions, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix)
