@@ -36,6 +36,8 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, ga
 
   # Setup sampler
   sampler = Sampler(model, task_name, num_actions, deterministic=False, gamma=gamma, tau=tau, num_workers=1)
+
+  print("Stop after full trajectory is completed: {}".format(full_traj))
   
   for epoch in range(num_epochs):
     print("EPOCH {} ==========================================".format(epoch))

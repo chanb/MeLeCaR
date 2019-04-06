@@ -188,16 +188,15 @@ class Sampler():
       if all(done):
         info = info[0]
         print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"], info["hit"]/info["timestep"]))
-        state, reward, action, done = self.reset_traj()
-        hidden_state = self.model.init_hidden_state()
         if stop_at_done:
-          print("Trajectory is over. Finish sampling.")
           state = self.generate_state_vector(done, reward, self.num_actions, action, state)
           with torch.no_grad():
             _, next_val, _, = self.model(state, hidden_state)
 
           self.returns = self.compute_gae(next_val.detach(), self.rewards, self.masks, self.values, self.gamma, self.tau)
           return
+        state, reward, action, done = self.reset_traj()
+        hidden_state = self.model.init_hidden_state()
       elif any(done):
         # This is due to environment setting
         # TODO: Allow different trajectory lengths
