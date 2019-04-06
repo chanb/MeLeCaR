@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+# import torch.nn.functional as F
 from torch.distributions import Categorical
 from rl_models.model_init import weight_init
 
@@ -21,6 +22,7 @@ class GRUActorCritic(nn.Module):
     x = self.relu1(x)
     val = self.value(x)
     dist = self.policy(x).squeeze(0)
+    # print(F.softmax(mu, dim=1))
     return Categorical(logits=dist), val, h
 
   def init_hidden_state(self, batchsize=1):
