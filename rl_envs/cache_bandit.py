@@ -19,7 +19,7 @@ class CacheBandit(gym.Env):
     self.action_space = spaces.Discrete(self.cache_size)
     self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.cache_size, 3))
 
-    self._next_evict_time = 0
+    self._starting_request = 0
     df = pd.read_csv(self.workload, sep=' ',header = None)
     df.columns = ['timestamp','pid','pname','blockNo', \
                   'blockSize', 'readOrWrite', 'bdMajor', 'bdMinor', 'hash']
@@ -104,13 +104,14 @@ class CacheBandit(gym.Env):
   # Reset to a specified starting point
   def reset(self, starting_request=0):
     assert starting_request < self._size, "Starting point ({}) is after the request stream ({})".format(starting_point, self._size)
+    print("Reset starting request to {}".format(starting_request))
     self._hit = 0
-    self._counter = starting_request#random.randint(0, self._size - self.cache_size)
-    self._next_evict_time = self._counter
+    self._counter = starting_request
     self._lfu = defaultdict(int)
     self._lru = []
     self._cache = []
     self._fill_until_evict()
+    self._starting_request = starting_request
     return self._compute_state()
 
 
@@ -132,5 +133,5 @@ class CacheBandit(gym.Env):
     curr_timestep = self._counter
     
     self._fill_until_evict()
-    return self._compute_state(), (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit}
+    return self._compute_state(), (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit, "starting_request": self._starting_request}
 

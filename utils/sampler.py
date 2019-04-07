@@ -188,7 +188,7 @@ class Sampler():
       # Grab hidden state for the extra information
       if all(done):
         info = info[0]
-        print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"], info["hit"]/info["timestep"]))
+        print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
         if stop_at_done:
           state = self.generate_state_vector(done, reward, self.num_actions, action, state)
           with torch.no_grad():
@@ -210,7 +210,7 @@ class Sampler():
     self.last_hidden_state = hidden_state
 
     info = info[0]
-    print("Leftover requests - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"], info["hit"]/info["timestep"]))
+    print("Leftover requests - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], (info["timestep"] - info["starting_request"])))
 
     # Compute the return
     state = self.generate_state_vector(done, reward, self.num_actions, action, state)
