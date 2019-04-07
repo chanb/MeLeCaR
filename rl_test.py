@@ -35,6 +35,7 @@ def test(algo, model_type, max_step, full_traj, num_tests, task_name, num_action
 
   print("Stop after full trajectory is completed: {}".format(full_traj))
   print("Input model: {}".format(model_full_path))
+  print("Starting request: {}".format(starting_request))
 
   for i in range(num_tests):
     print("Performing {}'th test ==========================================".format(i))
