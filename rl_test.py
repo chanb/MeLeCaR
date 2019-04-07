@@ -62,8 +62,8 @@ if __name__ == '__main__':
   parser.add_argument("--max_requests", type=int, help="the maximum number of requests from workload", default=50000)
 
   parser.add_argument("--input_dir", type=str, help="the directory to load the models from", required=True)
-  parser.add_argument("--input_prefix", type=str, help="the model prefix to load", required=True)
+  parser.add_argument("--input_model", type=str, help="the model to load", required=True)
 
   args = parser.parse_args()
 
-  test(args.algo, args.model_type, args.max_step, args.full_traj, args.task_name, args.num_actions, args.max_requests, args.input_dir, args.input_prefix)
+  test(args.algo, args.model_type, args.max_step, args.full_traj, args.task_name, args.num_actions, args.max_requests, args.input_dir, args.input_model)
