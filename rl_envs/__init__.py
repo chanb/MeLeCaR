@@ -1,6 +1,6 @@
 from gym.envs.registration import register
 
-for max_requests in [10000, 50000]:
+for max_requests in [10000, 50000, 100000]:
   for cache_size in [10, 30]:
     register(
       "Cache-Bandit-C{}-Max{}-{}-v0".format(cache_size, max_requests, "casa"),
