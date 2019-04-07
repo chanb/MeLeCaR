@@ -105,8 +105,8 @@ class Sampler():
 
 
   # Resets the trajectory to the beginning
-  def reset_traj(self):
-    states = self.envs.reset()
+  def reset_traj(self, starting_point=0):
+    states = self.envs.reset(starting_point)
     return torch.from_numpy(states), torch.zeros([self.num_workers, ]), torch.from_numpy(np.full((self.num_workers, ), -1)), torch.zeros([self.num_workers, ])
 
 

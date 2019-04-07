@@ -28,7 +28,7 @@ class CacheBandit(gym.Env):
 
     # Normalize abs position
     self._stream = [request / max(self._stream) for request in self._stream]
-    
+
     self._size = len(self._stream)
     self._counter = 0
 
@@ -101,10 +101,11 @@ class CacheBandit(gym.Env):
           self._counter += 1
     
 
-  # Random starting point
-  def reset(self):
+  # Reset to a specified starting point
+  def reset(self, starting_request=0):
+    assert starting_request < self._size, "Starting point ({}) is after the request stream ({})".format(starting_point, self._size)
     self._hit = 0
-    self._counter = 0#random.randint(0, self._size - self.cache_size)
+    self._counter = starting_request#random.randint(0, self._size - self.cache_size)
     self._next_evict_time = self._counter
     self._lfu = defaultdict(int)
     self._lru = []
