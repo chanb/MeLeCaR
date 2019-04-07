@@ -15,12 +15,14 @@ class GRUActorCritic(nn.Module):
     self.relu1 = nn.ReLU()
     self.policy = nn.Linear(hidden_size, output_size)
     self.value = nn.Linear(hidden_size, 1)
+    self.relu2 = nn.ReLU()
     self.apply(weight_init)
 
   def forward(self, x, h):
     x, h = self.gru(x, h)
     x = self.relu1(x)
     val = self.value(x)
+    val = self.relu2(val)
     dist = self.policy(x).squeeze(0)
     # print(F.softmax(mu, dim=1))
     return Categorical(logits=dist), val, h
