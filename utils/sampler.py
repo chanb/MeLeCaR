@@ -168,6 +168,7 @@ class Sampler():
       action = self.get_next_action(dist)
 
       log_prob = dist.log_prob(action)
+      entropy = dist.entropy().mean().clone()
       next_state, reward, done, info = self.envs.step(action.cpu().numpy())
       done = done.astype(int)
 
@@ -175,7 +176,7 @@ class Sampler():
       done = torch.from_numpy(done).float()
         
       # Store the information
-      self.insert_storage(log_prob.unsqueeze(0), state, action.unsqueeze(0), reward, done, value, hidden_state, torch.tensor(dist.entropy().mean()).unsqueeze(0))
+      self.insert_storage(log_prob.unsqueeze(0), state, action.unsqueeze(0), reward, done, value, hidden_state, entropy.unsqueeze(0))
       self.save_evaluate(action, state, reward)
 
       # Update to the next value

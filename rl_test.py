@@ -27,19 +27,14 @@ def test(algo, model_type, max_step, full_traj, num_tests, task_name, num_action
     task_name = "Cache-Bandit-C{}-Max{}-casa-v0".format(num_actions, max_requests)
 
   # Create the model
-  if (model_type == GRU and algo == REINFORCE):
-    model = GRUPolicy(num_actions, num_feature)
-  elif(model_type == GRU and algo == A2C):
-    model = GRUActorCritic(num_actions, num_feature)
-
-  model = model.to(DEVICE)
-  torch.load(model_full_path, map_location=MAP_LOCATION)
+  model = torch.load(model_full_path, map_location=MAP_LOCATION)
+  model.eval()
 
   # Setup sampler
   sampler = Sampler(model, task_name, num_actions, deterministic=False, num_workers=1)
 
   print("Stop after full trajectory is completed: {}".format(full_traj))
-  print("Input Directory: {}".format(input_dir))
+  print("Input model: {}".format(model_full_path))
 
   for i in range(num_tests):
     print("Performing {}'th test ==========================================".format(i))

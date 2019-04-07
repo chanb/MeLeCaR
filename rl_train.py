@@ -34,6 +34,7 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, ga
     agent = AdvantageActorCritic(model, optimizer, critic_coef, actor_coef, entropy_coef)
 
   model = model.to(DEVICE)
+  model.train()
 
   # Setup sampler
   sampler = Sampler(model, task_name, num_actions, deterministic=False, gamma=gamma, tau=tau, num_workers=1)
