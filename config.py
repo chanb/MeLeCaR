@@ -23,4 +23,5 @@ DATASET_EXTENSION = ".pkl"
 INPUTS = "inputs"
 OUTPUTS = "outputs"
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+MAP_LOCATION = 'cuda' if torch.cuda.is_available() else 'cpu'
+DEVICE = torch.device(MAP_LOCATION)

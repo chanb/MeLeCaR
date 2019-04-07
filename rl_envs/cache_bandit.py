@@ -25,7 +25,10 @@ class CacheBandit(gym.Env):
                   'blockSize', 'readOrWrite', 'bdMajor', 'bdMinor', 'hash']
 
     self._stream = df['blockNo'].tolist()[:max_requests]
-    # self._stream = [request / max(self._stream) for request in self._stream]
+
+    # Normalize abs position
+    self._stream = [request / max(self._stream) for request in self._stream]
+    
     self._size = len(self._stream)
     self._counter = 0
 
@@ -61,12 +64,15 @@ class CacheBandit(gym.Env):
     
     # Columns: recency, frequency, block number
     # Row: cache location
-    # raw = np.column_stack((recency, frequency))
-    # normalized = normalize(raw, axis=0)
+    raw = np.column_stack((recency, frequency))
+    normalized = normalize(raw, axis=0)
 
-    # final_state = np.append(normalized, block_num, axis=1)
-    raw = np.column_stack((recency, frequency, block_num))
-    final_state = normalize(raw, axis=0)
+    final_state = np.append(normalized, block_num, axis=1)
+
+    # Normalize rel position
+    # raw = np.column_stack((recency, frequency, block_num))
+    # final_state = normalize(raw, axis=0)
+
     return final_state
 
 

@@ -10,7 +10,7 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, gamma, tau, task_name, num_actions, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix):
+def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, gamma, tau, task_name, num_actions, max_requests, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
@@ -19,7 +19,7 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, ga
 
   # Setup environment
   if task_name == CASA:
-    task_name = "Cache-Bandit-C{}-casa-v0".format(num_actions)
+    task_name = "Cache-Bandit-C{}-Max{}-casa-v0".format(num_actions, max_requests)
 
   # Create the model
   if (model_type == GRU and algo == REINFORCE):
@@ -78,10 +78,11 @@ if __name__ == '__main__':
 
   parser.add_argument("--task_name", type=str, help="the task to learn", default="casa", choices=TASKS)
   parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30)
+  parser.add_argument("--max_requests", type=int, help="the maximum number of requests from workload", default=50000)
 
   parser.add_argument("--output_dir", type=str, help="the directory to save the models", required=True)
   parser.add_argument("--output_prefix", type=str, help="the model prefix to save", required=True)
 
   args = parser.parse_args()
 
-  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.full_traj, args.gamma, args.tau, args.task_name, args.num_actions, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix)
+  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.full_traj, args.gamma, args.tau, args.task_name, args.num_actions, args.max_requests, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix)
