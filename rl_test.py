@@ -10,7 +10,7 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def test(algo, model_type, max_step, full_traj, task_name, num_actions, max_requests, input_dir, input_model):
+def test(algo, model_type, max_step, full_traj, num_tests, task_name, num_actions, max_requests, input_dir, input_model):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
@@ -41,13 +41,14 @@ def test(algo, model_type, max_step, full_traj, task_name, num_actions, max_requ
   print("Stop after full trajectory is completed: {}".format(full_traj))
   print("Input Directory: {}".format(input_dir))
 
-  sampler.reset_storage()
-  sampler.last_hidden_state = None
+  for i in range(num_tests):
+    print("Performing {}'th test ==========================================".format(i))
+    sampler.reset_storage()
+    sampler.last_hidden_state = None
 
-  sampler.sample(max_step, stop_at_done=full_traj)
+    sampler.sample(max_step, stop_at_done=full_traj)
     
   sampler.envs.close()
-
 
 
 if __name__ == '__main__':
@@ -56,6 +57,7 @@ if __name__ == '__main__':
   parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="gru", help="the model architecture to train")
   parser.add_argument("--max_step", type=int, help="maximum number of steps to take", default=50000)
   parser.add_argument('--full_traj', type=str2bool, default=True, help='whether or not to sample complete trajectories')
+  parser.add_argument('--num_tests', type=int, default=10, help='number of tests to perform')
 
   parser.add_argument("--task_name", type=str, help="the task to learn", default="casa", choices=TASKS)
   parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30)
@@ -66,4 +68,4 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  test(args.algo, args.model_type, args.max_step, args.full_traj, args.task_name, args.num_actions, args.max_requests, args.input_dir, args.input_model)
+  test(args.algo, args.model_type, args.max_step, args.full_traj, args.num_tests, args.task_name, args.num_actions, args.max_requests, args.input_dir, args.input_model)
