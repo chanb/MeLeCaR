@@ -40,9 +40,7 @@ def test(algo, model_type, max_step, full_traj, num_tests, task_name, num_action
     print("Performing {}'th test ==========================================".format(i))
     sampler.reset_storage()
     sampler.last_hidden_state = None
-
-    sampler.reset_traj(starting_request)
-    sampler.sample(max_step, stop_at_done=full_traj)
+    sampler.sample(max_step, stop_at_done=full_traj, starting_point=starting_request)
     
   sampler.envs.close()
 

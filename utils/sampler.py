@@ -148,8 +148,8 @@ class Sampler():
 
   #TODO: Add code to handle non recurrent case
   # Sample batchsize amount of moves
-  def sample(self, batchsize, last_hidden_state=None, stop_at_done=False):
-    state, reward, action, done = self.reset_traj()
+  def sample(self, batchsize, last_hidden_state=None, stop_at_done=False, starting_point=0):
+    state, reward, action, done = self.reset_traj(starting_point)
 
     hidden_state = last_hidden_state
     if last_hidden_state is None:
@@ -196,7 +196,7 @@ class Sampler():
 
           self.returns = self.compute_gae(next_val.detach(), self.rewards, self.masks, self.values, self.gamma, self.tau)
           return
-        state, reward, action, done = self.reset_traj()
+        state, reward, action, done = self.reset_traj(starting_point)
         hidden_state = self.model.init_hidden_state()
       elif any(done):
         # This is due to environment setting
