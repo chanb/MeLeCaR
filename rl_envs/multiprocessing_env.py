@@ -127,9 +127,9 @@ class SubprocVecEnv(VecEnv):
     obs, rews, dones, infos = zip(*results)
     return np.stack(obs), np.stack(rews), np.stack(dones), infos
 
-  def reset(self):
+  def reset(self, starting_point=0):
     for remote in self.remotes:
-      remote.send(('reset', None))
+      remote.send(('reset', starting_point))
     return np.stack([remote.recv() for remote in self.remotes])
 
   def reset_task(self, tasks):
