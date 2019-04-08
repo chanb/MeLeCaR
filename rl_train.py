@@ -18,8 +18,10 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, ga
   num_feature = num_actions * 3
 
   # Setup environment
+  casa_index = 6
+
   if task_name == CASA:
-    task_name = "Cache-Bandit-C{}-Max{}-casa-v0".format(num_actions, max_requests)
+    task_name = "Cache-Bandit-C{}-Max{}-casa-{}-v0".format(num_actions, max_requests, casa_index)
 
   # Create the model
   if (model_type == GRU and algo == REINFORCE):

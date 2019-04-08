@@ -25,8 +25,10 @@ def test(algo, model_type, num_tests, task_name, num_actions, starting_request, 
   num_feature = num_actions * 3
 
   # Setup environment
+  casa_index = 5
+
   if task_name == CASA:
-    task_name = "Cache-Bandit-C{}-Max{}-casa-v0".format(num_actions, max_requests)
+    task_name = "Cache-Bandit-C{}-Max{}-casa-{}-v0".format(num_actions, max_requests, casa_index)
 
   env = gym.make(task_name)
 
