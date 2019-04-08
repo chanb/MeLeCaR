@@ -48,7 +48,7 @@ def test(algo, model_type, num_tests, task_name, file_index, num_actions, starti
     hidden_state = model.init_hidden_state(1).to(DEVICE)
 
     while not done:
-      state = torch.from_numpy(state.reshape(1, 1, num_feature)).float()
+      state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
       dist, _, hidden_state = model(state, hidden_state)
       action = dist.sample().cpu().numpy()[0]
       state, reward, done, info = env.step(action)
