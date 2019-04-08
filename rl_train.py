@@ -10,18 +10,18 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, gamma, tau, task_name, num_actions, max_requests, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix):
+def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, gamma, tau, task_name, file_index, num_actions, max_requests, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
+  assert file_index in FILE_INDEX, "Invalid file index. Choices: {}".format(FILE_INDEX)
+  assert num_actions in CACHE_SIZE, "Invalid number of actions. Choices: {}".format(CACHE_SIZE)
+  assert max_requests in MAX_REQUESTS, "Invalid maximum requests allowed. Choices: {}".format(MAX_REQUESTS)
 
   num_feature = num_actions * 3
 
   # Setup environment
-  casa_index = 6
-
-  if task_name == CASA:
-    task_name = "Cache-Bandit-C{}-Max{}-casa-{}-v0".format(num_actions, max_requests, casa_index)
+  task_name = "Cache-Bandit-C{}-Max{}-{}-{}-v0".format(num_actions, max_requests, task_name, file_index)
 
   # Create the model
   if (model_type == GRU and algo == REINFORCE):
@@ -79,13 +79,14 @@ if __name__ == '__main__':
   parser.add_argument("--actor_coef", type=float, default=0.5, help="the contribution of actor loss")
   parser.add_argument("--entropy_coef", type=float, default=0.001, help="the contribution of entropy")
 
-  parser.add_argument("--task_name", type=str, help="the task to learn", default="casa", choices=TASKS)
-  parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30)
-  parser.add_argument("--max_requests", type=int, help="the maximum number of requests from workload", default=50000)
+  parser.add_argument("--task_name", type=str, help="the task to learn", default="home", choices=TASKS)
+  parser.add_argument("--file_index", type=int, help="the blocktrace file index", default=6, choices=FILE_INDEX)
+  parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30, choices=CACHE_SIZE)
+  parser.add_argument("--max_requests", type=int, help="the maximum number of requests from workload", default=50000, choices=MAX_REQUESTS)
 
   parser.add_argument("--output_dir", type=str, help="the directory to save the models", required=True)
   parser.add_argument("--output_prefix", type=str, help="the model prefix to save", required=True)
 
   args = parser.parse_args()
 
-  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.full_traj, args.gamma, args.tau, args.task_name, args.num_actions, args.max_requests, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix)
+  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.full_traj, args.gamma, args.tau, args.task_name, args.file_index, args.num_actions, args.max_requests, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix)

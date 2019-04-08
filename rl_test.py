@@ -12,10 +12,13 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def test(algo, model_type, num_tests, task_name, num_actions, starting_request, max_requests, input_dir, input_model):
+def test(algo, model_type, num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_dir, input_model):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
+  assert file_index in FILE_INDEX, "Invalid file index. Choices: {}".format(FILE_INDEX)
+  assert num_actions in CACHE_SIZE, "Invalid number of actions. Choices: {}".format(CACHE_SIZE)
+  assert max_requests in MAX_REQUESTS, "Invalid maximum requests allowed. Choices: {}".format(MAX_REQUESTS)
   assert os.path.isdir(input_dir), "Input directory {} doesn't exist".format(input_dir)
 
   model_full_path = input_dir.rstrip("/") + "/" + input_model
@@ -25,10 +28,8 @@ def test(algo, model_type, num_tests, task_name, num_actions, starting_request, 
   num_feature = num_actions * 3
 
   # Setup environment
-  casa_index = 5
 
-  if task_name == CASA:
-    task_name = "Cache-Bandit-C{}-Max{}-casa-{}-v0".format(num_actions, max_requests, casa_index)
+  task_name = "Cache-Bandit-C{}-Max{}-{}-{}-v0".format(num_actions, max_requests, task_name, file_index)
 
   env = gym.make(task_name)
 
@@ -67,9 +68,10 @@ if __name__ == '__main__':
   parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="gru", help="the model architecture to train")
   parser.add_argument('--num_tests', type=int, default=10, help='number of tests to perform')
 
-  parser.add_argument("--task_name", type=str, help="the task to learn", default="casa", choices=TASKS)
-  parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30)
-  parser.add_argument("--max_requests", type=int, help="the maximum number of requests from workload", default=50000)
+  parser.add_argument("--task_name", type=str, help="the task to learn", default="home", choices=TASKS)
+  parser.add_argument("--file_index", type=int, help="the blocktrace file index", default=6, choices=FILE_INDEX)
+  parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30, choices=CACHE_SIZE)
+  parser.add_argument("--max_requests", type=int, help="the maximum number of requests from workload", default=50000, choices=MAX_REQUESTS)
   parser.add_argument("--starting_request", type=int, help="the starting request from workload", default=10000)
 
   parser.add_argument("--input_dir", type=str, help="the directory to load the models from", required=True)
@@ -77,4 +79,4 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  test(args.algo, args.model_type, args.num_tests, args.task_name, args.num_actions, args.starting_request, args.max_requests, args.input_dir, args.input_model)
+  test(args.algo, args.model_type, args.num_tests, args.task_name, args.file_index, args.num_actions, args.starting_request, args.max_requests, args.input_dir, args.input_model)
