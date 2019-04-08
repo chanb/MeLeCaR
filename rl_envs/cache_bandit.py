@@ -44,7 +44,7 @@ class CacheBandit(gym.Env):
     frequency = []
     recency_dict = defaultdict(int)
     
-    # Compute the recency order of each page in cache
+    # Compute the recency and frequency order of each page in cache
     for time in range(len(self._lru)):
       recency_dict[self._lru[time]] = time + 1
     for block in self._cache:
@@ -53,13 +53,13 @@ class CacheBandit(gym.Env):
 
     block_num = self._cache[:]
     
+    # This shouldn't happen but this pads the 0's to empty slots in cache
     if len(recency) < self.cache_size:
-        for _ in range(0, self.cache_size - len(recency)):
-            recency.append(0)
-            frequency.append(0)
-            block_num.append(0)
+      for _ in range(0, self.cache_size - len(recency)):
+        recency.append(0)
+        frequency.append(0)
+        block_num.append(0)
 
-    
     block_num = np.expand_dims(np.array(block_num), axis=1)
     
     # Columns: recency, frequency, block number
@@ -108,11 +108,11 @@ class CacheBandit(gym.Env):
     print("Reset starting request to {}".format(starting_request))
     self._hit = 0
     self._counter = starting_request
+    self._starting_request = starting_request
     self._lfu = defaultdict(int)
     self._lru = []
     self._cache = []
     self._fill_until_evict()
-    self._starting_request = starting_request
     return self._compute_state()
 
 
