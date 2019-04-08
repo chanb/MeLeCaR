@@ -123,7 +123,8 @@ class CacheBandit(gym.Env):
     request_block = self._stream[self._counter]
     
     self._lru.remove(victim_block)
-    self._lfu[victim_block] = 0
+    del self._lfu[victim_block]
+    #self._lfu[victim_block] = 0
     self._cache.remove(victim_block)
 
     # Insert the request block

@@ -50,8 +50,7 @@ def test(algo, model_type, num_tests, task_name, file_index, num_actions, starti
     while not done:
       state = torch.from_numpy(state.reshape(1, 1, num_feature)).float()
       dist, _, hidden_state = model(state, hidden_state)
-      action = dist.sample().cpu().numpy()
-      action = action[0]
+      action = dist.sample().cpu().numpy()[0]
       state, reward, done, info = env.step(action)
 
     print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
