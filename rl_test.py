@@ -37,7 +37,7 @@ def test(algo, model_type, num_tests, task_name, num_actions, starting_request, 
   print("Starting request: {}".format(starting_request))
 
   for i in range(num_tests):
-    print("Performing {}'th test ==========================================".format(i))
+    print("Performing test {} ==========================================".format(i))
     state = env.reset(starting_request)
     done = False
     hidden_state = model.init_hidden_state(1).to(DEVICE)
@@ -49,7 +49,6 @@ def test(algo, model_type, num_tests, task_name, num_actions, starting_request, 
       action = action[0]
       state, reward, done, info = env.step(action)
 
-    info = info[0]
     print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
 
 if __name__ == '__main__':
