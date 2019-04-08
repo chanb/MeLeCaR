@@ -1,5 +1,6 @@
 import argparse
 import gym
+import numpy as np
 import torch
 import torch.optim as optim
 import os
@@ -36,6 +37,7 @@ def test(algo, model_type, num_tests, task_name, num_actions, starting_request, 
   print("Input model: {}".format(model_full_path))
   print("Starting request: {}".format(starting_request))
 
+  hit_rates = []
   for i in range(num_tests):
     print("Performing test {} ==========================================".format(i))
     state = env.reset(starting_request)
@@ -50,6 +52,12 @@ def test(algo, model_type, num_tests, task_name, num_actions, starting_request, 
       state, reward, done, info = env.step(action)
 
     print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
+
+    hit_rates.append(info["hit"]/(info["timestep"] - info["starting_request"]))
+
+  hit_rates = np.array(hit_rates)
+  print("Average: {}\tStandard Deviation: {}".format(np.average(hit_rates), np.std(hit_rates)))
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
