@@ -1,4 +1,5 @@
 import argparse
+import gym
 import torch
 import torch.optim as optim
 import os
@@ -10,7 +11,7 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def test(algo, model_type, max_step, full_traj, num_tests, task_name, num_actions, starting_request, max_requests, input_dir, input_model):
+def test(algo, model_type, num_tests, task_name, num_actions, starting_request, max_requests, input_dir, input_model):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
@@ -26,32 +27,35 @@ def test(algo, model_type, max_step, full_traj, num_tests, task_name, num_action
   if task_name == CASA:
     task_name = "Cache-Bandit-C{}-Max{}-casa-v0".format(num_actions, max_requests)
 
+  env = gym.make(task_name)
+
   # Create the model
   model = torch.load(model_full_path, map_location=MAP_LOCATION)
   model.eval()
 
-  # Setup sampler
-  sampler = Sampler(model, task_name, num_actions, deterministic=False, num_workers=1)
-
-  print("Stop after full trajectory is completed: {}".format(full_traj))
   print("Input model: {}".format(model_full_path))
   print("Starting request: {}".format(starting_request))
 
   for i in range(num_tests):
     print("Performing {}'th test ==========================================".format(i))
-    sampler.reset_storage()
-    sampler.last_hidden_state = None
-    sampler.sample(max_step, stop_at_done=full_traj, starting_point=starting_request)
-    
-  sampler.envs.close()
+    state = env.reset(starting_request)
+    done = False
+    hidden_state = model.init_hidden_state(1).to(DEVICE)
 
+    while not done:
+      state = torch.from_numpy(state.reshape(1, 1, num_feature)).float()
+      dist, _, hidden_state = model(state, hidden_state)
+      action = dist.sample().cpu().numpy()
+      action = action[0]
+      state, reward, done, info = env.step(action)
+
+    info = info[0]
+    print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("--algo", help="the rl algorithm to use", type=str, choices=ALGOS, default="reinforce")
   parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="gru", help="the model architecture to train")
-  parser.add_argument("--max_step", type=int, help="maximum number of steps to take", default=50000)
-  parser.add_argument('--full_traj', type=str2bool, default=True, help='whether or not to sample complete trajectories')
   parser.add_argument('--num_tests', type=int, default=10, help='number of tests to perform')
 
   parser.add_argument("--task_name", type=str, help="the task to learn", default="casa", choices=TASKS)
@@ -64,4 +68,4 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  test(args.algo, args.model_type, args.max_step, args.full_traj, args.num_tests, args.task_name, args.num_actions, args.starting_request, args.max_requests, args.input_dir, args.input_model)
+  test(args.algo, args.model_type, args.num_tests, args.task_name, args.num_actions, args.starting_request, args.max_requests, args.input_dir, args.input_model)
