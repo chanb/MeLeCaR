@@ -24,10 +24,9 @@ class CacheBandit(gym.Env):
     df.columns = ['timestamp','pid','pname','blockNo', \
                   'blockSize', 'readOrWrite', 'bdMajor', 'bdMinor', 'hash']
 
-    self._stream = df['blockNo'].tolist()[:max_requests]
-
     # Normalize abs position
-    self._stream = [request / max(self._stream) for request in self._stream]
+    self._stream = df['blockNo'].values[:max_requests]
+    self._stream = self._stream / max(self._stream)
 
     self._size = len(self._stream)
     self._counter = 0
