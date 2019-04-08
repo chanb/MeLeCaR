@@ -93,6 +93,7 @@ class CacheBandit(gym.Env):
       else:
         # Cache Miss
         if len(self._cache) == self.cache_size:
+          # Agent needs to choose victim block for request block
           needs_evict = True
         else:
           # Cache is not full
@@ -118,6 +119,7 @@ class CacheBandit(gym.Env):
   def step(self, action):
     assert self.action_space.contains(action)
 
+    # Clear out victim block in cache
     victim_block = self._cache[action]
     request_block = self._stream[self._counter]
     
@@ -125,13 +127,14 @@ class CacheBandit(gym.Env):
     self._lfu[victim_block] = 0
     self._cache.remove(victim_block)
 
-    # Insert the page
+    # Insert the request block
     self._cache.append(request_block)
     self._lru.append(request_block)
     self._lfu[request_block] = 1
     self._counter += 1
     curr_timestep = self._counter
     
+    # Find the next timestep where we need to evict again
     self._fill_until_evict()
     return self._compute_state(), (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit, "starting_request": self._starting_request}
 
