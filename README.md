@@ -34,11 +34,12 @@ We attemp to create a cache eviction policy using multi-label multi-class superv
 - Workload: casa 6 (First 10000 requests)
 
 **Cache Size: 100**  
-1)
+1.
   - Number of trajectories: 1 (length of 10000)
   - Number of epochs: 1000
   - Workload: casa 6 (First 10000 requests)
-2)
+
+2.
   - Number of trajectories: 1 (length of 10000)
   - Number of epochs: 5000
   - Workload: casa 6 (First 10000 requests)
