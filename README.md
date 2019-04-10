@@ -89,7 +89,7 @@ OPT: 0.184366
 LFU: 0.010334  
 LRU: 0.002292  
 
-#### FIU_trace/casa-110108-112108.4.blkparse
+#### casa-110108-112108.4.blkparse
 **size: 30**  
 0-100000  
 OPT: 0.10213  
