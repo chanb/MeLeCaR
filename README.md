@@ -44,7 +44,7 @@ We attemp to create a cache eviction policy using multi-label multi-class superv
 
 
 ### Evaluation:
-#### casa-110108-112108.6.blkparse**
+#### casa-110108-112108.6.blkparse
 **size: 30**  
 10000-100000: Done  
 OPT: 0.2497888888888889  
