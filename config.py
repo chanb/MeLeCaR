@@ -4,6 +4,7 @@ BASELINE = "baseline"
 GRU = "gru"
 MODEL_TYPES = [BASELINE, GRU]
 
+ENV_LOCATION_PREFIX = "rl_envs/"
 
 REINFORCE = "reinforce"
 A2C = "a2c"

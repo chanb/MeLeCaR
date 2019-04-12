@@ -25,6 +25,9 @@ def worker(remote, parent_remote, env_fn_wrapper):
       break
     elif cmd == 'get_spaces':
       remote.send((env.observation_space, env.action_space))
+    elif cmd == 'get_max_request':
+      ob = env.get_max_request()
+      remote.send(ob)
     else:
       raise NotImplementedError
 
@@ -135,6 +138,11 @@ class SubprocVecEnv(VecEnv):
   def reset_task(self, tasks):
     for remote, task in zip(self.remotes, tasks):
       remote.send(('reset_task', task))
+    return np.stack([remote.recv() for remote in self.remotes])
+
+  def get_max_request(self):
+    for remote in self.remotes:
+      remote.send(('get_max_request'))
     return np.stack([remote.recv() for remote in self.remotes])
 
   def close(self):

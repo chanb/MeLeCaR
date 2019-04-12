@@ -4,18 +4,17 @@ import random
 import gc
 from sklearn.preprocessing import normalize
 from collections import defaultdict
+from config import ENV_LOCATION_PREFIX
 
 import gym
 from gym import spaces
-
-location_prefix = "rl_envs/"
 
 class CacheBandit(gym.Env):
   def __init__(self, cache_size, workload, max_requests=-1):
     print("WORKLOAD: {} CACHE SIZE: {} MAX_REQUESTS: {}".format(workload, cache_size, max_requests))
     self._hit = 0
     self.cache_size = cache_size
-    self.workload = location_prefix + workload
+    self.workload = ENV_LOCATION_PREFIX + workload
 
     self.action_space = spaces.Discrete(self.cache_size)
     self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.cache_size, 3))
@@ -125,7 +124,6 @@ class CacheBandit(gym.Env):
     
     self._lru.remove(victim_block)
     del self._lfu[victim_block]
-    #self._lfu[victim_block] = 0
     self._cache.remove(victim_block)
 
     # Insert the request block

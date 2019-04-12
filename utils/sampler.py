@@ -33,7 +33,7 @@ class Sampler():
     # This is for multi-processing
     self.num_workers = num_workers
     self.envs = SubprocVecEnv([make_env(env_name) for _ in range(num_workers)])
-    self.max_length = self.envs[0].get_size()
+    self.max_length = self.envs.get_max_request()
 
   # Computes the advantage where lambda = tau
   def compute_gae(self, next_value, rewards, masks, values, gamma=0.99, tau=0.95):

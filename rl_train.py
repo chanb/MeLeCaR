@@ -2,6 +2,7 @@ import argparse
 import torch
 import torch.optim as optim
 import os
+import random
 
 from config import *
 from rl_algos.reinforce import Reinforce
@@ -10,7 +11,7 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, gamma, tau, task_name, file_index, num_actions, max_requests, random_start, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix):
+def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done, gamma, tau, task_name, file_index, num_actions, max_requests, random_start, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
@@ -41,13 +42,15 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, ga
   # Setup sampler
   sampler = Sampler(model, task_name, num_actions, deterministic=False, gamma=gamma, tau=tau, num_workers=1)
 
-  print("Stop after full trajectory is completed: {}".format(full_traj))
+  def _random_start(max_request):
+    return random.randint(starting_point, max_request - 1)
+
+  get_starting_point = _random_start(sampler.max_length) if random_start else lambda x: starting_point
+
+  print("Stop after singlefull trajectory is completed for each epoch: {}".format(stop_at_done))
   print("Output Directory: {}".format(output_dir))
   if not os.path.isdir(output_dir):
     os.makedirs(output_dir, exist_ok=True)
-
-  def _random_start(max_request):
-    
 
   for epoch in range(num_epochs):
     print("EPOCH {} ==========================================".format(epoch))
@@ -55,7 +58,7 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, ga
     sampler.last_hidden_state = None
 
     starting_point = get_starting_point()
-    sampler.sample(batch_size, stop_at_done=full_traj)
+    sampler.sample(batch_size, stop_at_done=stop_at_done)
     sampler.concat_storage()
     agent.update(sampler)
 
@@ -67,17 +70,16 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, full_traj, ga
   sampler.envs.close()
 
 
-
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("--algo", help="the rl algorithm to use", type=str, choices=ALGOS, default="reinforce")
   parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="gru", help="the model architecture to train")
-  parser.add_argument("--batch_size", type=int, help="batch size", default=128)
+  parser.add_argument("--batch_size", type=int, help="batch size (number of timesteps taken)", default=128)
   parser.add_argument("--learning_rate", type=float, help="learning rate", default=1e-3)
   parser.add_argument('--gamma', type=float, default=0.99, help='discount factor (default: 0.99)')
   parser.add_argument("--num_epochs", type=int, help="number of epochs", default=100)
   parser.add_argument('--tau', type=float, default=1, help='GAE parameter (default: 1)')
-  parser.add_argument('--full_traj', type=str2bool, default=True, help='whether or not to sample complete trajectories')
+  parser.add_argument('--stop_at_done', type=str2bool, default=True, help='whether or not to sample after one complete trajectory per epoch')
 
   parser.add_argument("--critic_coef", type=float, default=0.5, help="the contribution of critic loss")
   parser.add_argument("--actor_coef", type=float, default=0.5, help="the contribution of actor loss")
@@ -94,4 +96,4 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.full_traj, args.gamma, args.tau, args.task_name, args.file_index, args.num_actions, args.max_requests, args.random_start, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix)
+  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.stop_at_done, args.gamma, args.tau, args.task_name, args.file_index, args.num_actions, args.max_requests, args.random_start, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix)
