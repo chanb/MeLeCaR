@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import random
+import gc
 from sklearn.preprocessing import normalize
 from collections import defaultdict
 
@@ -136,5 +137,9 @@ class CacheBandit(gym.Env):
     
     # Find the next timestep where we need to evict again
     self._fill_until_evict()
+    gc.collect()
     return self._compute_state(), (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit, "starting_request": self._starting_request}
 
+
+  def get_max_request(self):
+    return self._size
