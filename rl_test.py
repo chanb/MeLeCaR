@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 import os
+import gc
 
 from config import *
 from rl_algos.reinforce import Reinforce
@@ -46,12 +47,18 @@ def test(algo, model_type, num_tests, task_name, file_index, num_actions, starti
     state = env.reset(starting_request)
     done = False
     hidden_state = model.init_hidden_state(1).to(DEVICE)
+    prev_timestep = 0
 
     while not done:
       state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
       dist, _, hidden_state = model(state, hidden_state)
       action = dist.sample().cpu().numpy()[0]
       state, reward, done, info = env.step(action)
+
+      if info["timestep"] - prev_timestep > 100000:
+        print("Current timestep: {}".format(info["timestep"]))
+        prev_timestep = info["timestep"]
+        gc.collect()
 
     print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
 

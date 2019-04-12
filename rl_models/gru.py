@@ -51,5 +51,5 @@ class GRUPolicy(nn.Module):
 
   def init_hidden_state(self, batch_size=1):
     self.batch_size = batch_size
-    self.val = torch.zeros(self.batch_size, 1).to(DEVICE)
+    self.val = torch.zeros(max(1, batch_size), 1).to(DEVICE)
     return torch.zeros([1, max(1, batch_size), self.hidden_size])

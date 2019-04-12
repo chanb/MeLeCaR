@@ -40,7 +40,6 @@ class Sampler():
     values = values + [next_value]
     gae = 0
     returns = []
-    
     for step in reversed(range(len(rewards))):
       delta = rewards[step] + gamma * values[step + 1] * masks[step] - values[step]
       gae = delta + gamma * tau * masks[step] * gae
@@ -95,13 +94,13 @@ class Sampler():
 
   # Insert a sample into the storage
   def insert_storage(self, log_prob, state, action, reward, done, value, hidden_state, entropy):
-    self.log_probs.append(log_prob)
+    self.log_probs.append(log_prob.unsqueeze(0))
     self.states.append(state.unsqueeze(0))
-    self.actions.append(action.unsqueeze(0))
+    self.actions.append(action.unsqueeze(0).unsqueeze(0))
     self.rewards.append(torch.Tensor(reward).unsqueeze(1).to(DEVICE))
     self.masks.append(torch.Tensor(1 - done).unsqueeze(1).to(DEVICE))
     self.values.append(value)
-    self.entropies.append(entropy)
+    self.entropies.append(entropy.unsqueeze(0))
     self.hidden_states.append(hidden_state)
 
 
@@ -111,8 +110,7 @@ class Sampler():
     return torch.from_numpy(states), torch.zeros([self.num_workers, ]), torch.from_numpy(np.full((self.num_workers, ), -1)), torch.zeros([self.num_workers, ])
 
 
-  # TODO: Modify this
-  # Generate the state vector for RNN
+  # Generate the state vector for RNN in RL2
   # def generate_state_vector(self, done, reward, num_actions, action, state):
   #   done_entry = done.float().unsqueeze(1)
   #   reward_entry = reward.float().unsqueeze(1)
@@ -169,10 +167,10 @@ class Sampler():
       action = self.get_next_action(dist)
       if self.num_workers == 0:
         action = action[0]
+      next_state, reward, done, info = self.envs.step(action.cpu().numpy())
 
       log_prob = dist.log_prob(action)
       entropy = dist.entropy().mean().clone()
-      next_state, reward, done, info = self.envs.step(action.cpu().numpy())
 
       if self.num_workers > 0:
         done = done.astype(int)
@@ -184,7 +182,7 @@ class Sampler():
 
         
       # Store the information
-      self.insert_storage(log_prob.unsqueeze(0), state, action.unsqueeze(0), reward, done, value, hidden_state, entropy.unsqueeze(0))
+      self.insert_storage(log_prob, state, action, reward, done, value, hidden_state, entropy)
       self.save_evaluate(action, state, reward)
 
       # Update to the next value

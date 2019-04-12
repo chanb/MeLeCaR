@@ -142,7 +142,7 @@ class SubprocVecEnv(VecEnv):
 
   def get_max_request(self):
     for remote in self.remotes:
-      remote.send(('get_max_request'))
+      remote.send(('get_max_request', None))
     return np.stack([remote.recv() for remote in self.remotes])
 
   def close(self):

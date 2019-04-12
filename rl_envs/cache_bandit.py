@@ -135,7 +135,7 @@ class CacheBandit(gym.Env):
     
     # Find the next timestep where we need to evict again
     self._fill_until_evict()
-    gc.collect()
+    # gc.collect()
     return self._compute_state(), (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit, "starting_request": self._starting_request}
 
 
