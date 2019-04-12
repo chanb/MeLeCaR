@@ -40,12 +40,12 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done,
   model.train()
 
   # Setup sampler
-  sampler = Sampler(model, task_name, num_actions, deterministic=False, gamma=gamma, tau=tau, num_workers=1)
+  sampler = Sampler(model, task_name, num_actions, deterministic=False, gamma=gamma, tau=tau, num_workers=0)
 
   def _random_start(max_request):
-    return random.randint(starting_point, max_request - 1)
+    return random.randint(0, max(0, max_request - 1 - num_actions))
 
-  get_starting_point = _random_start(sampler.max_length) if random_start else lambda x: starting_point
+  get_starting_point = _random_start if random_start else lambda x: 0
 
   print("Stop after singlefull trajectory is completed for each epoch: {}".format(stop_at_done))
   print("Output Directory: {}".format(output_dir))
@@ -57,8 +57,8 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done,
     sampler.reset_storage()
     sampler.last_hidden_state = None
 
-    starting_point = get_starting_point()
-    sampler.sample(batch_size, stop_at_done=stop_at_done)
+    starting_point = get_starting_point(sampler.max_length)
+    sampler.sample(batch_size, stop_at_done=stop_at_done, starting_point=starting_point)
     sampler.concat_storage()
     agent.update(sampler)
 

@@ -32,7 +32,7 @@ class Sampler():
 
     # This is for multi-processing
     self.num_workers = num_workers
-    self.envs = SubprocVecEnv([make_env(env_name) for _ in range(num_workers)])
+    self.envs = SubprocVecEnv([make_env(env_name) for _ in range(num_workers)]) if num_workers > 0 else gym.make(env_name)
     self.max_length = self.envs.get_max_request()
 
   # Computes the advantage where lambda = tau
@@ -167,14 +167,21 @@ class Sampler():
       
       # Decide if we should exploit all the time
       action = self.get_next_action(dist)
+      if self.num_workers == 0:
+        action = action[0]
 
       log_prob = dist.log_prob(action)
       entropy = dist.entropy().mean().clone()
       next_state, reward, done, info = self.envs.step(action.cpu().numpy())
-      done = done.astype(int)
 
-      reward = torch.from_numpy(reward).float()
-      done = torch.from_numpy(done).float()
+      if self.num_workers > 0:
+        done = done.astype(int)
+        reward = torch.from_numpy(reward).float()
+        done = torch.from_numpy(done).float()
+      else:
+        done = torch.tensor([int(done)]).float()
+        reward = torch.tensor([reward]).float()
+
         
       # Store the information
       self.insert_storage(log_prob.unsqueeze(0), state, action.unsqueeze(0), reward, done, value, hidden_state, entropy.unsqueeze(0))
@@ -188,7 +195,8 @@ class Sampler():
 
       # Grab hidden state for the extra information
       if all(done):
-        info = info[0]
+        if self.num_workers > 0:
+          info = info[0]
         print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
         if stop_at_done:
           state = self.generate_state_vector(done, reward, self.num_actions, action, state)
@@ -209,8 +217,9 @@ class Sampler():
     ########################################################################
 
     self.last_hidden_state = hidden_state
-
-    info = info[0]
+    
+    if self.num_workers > 0:
+      info = info[0]
     print("Leftover requests - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], (info["timestep"] - info["starting_request"])))
 
     # Compute the return
