@@ -4,15 +4,9 @@ import numpy as np
 import torch
 import os
 import gc
-import random
-
-from memory_profiler import profile
-from pympler import summary, muppy, refbrowser
-import objgraph
 
 from config import *
 import rl_envs
-# from rl_envs.multiprocessing_env import SubprocVecEnv
 from utils.parser_util import str2bool
 
 # @profile
@@ -30,11 +24,8 @@ def run(state, model, hidden_state, num_feature, prev_timestep, env):
     prev_timestep = info["timestep"]
     print(info["hit"])
     gc.collect()
-  # all_objects = muppy.get_objects()
-  # sum1 = summary.summarize(all_objects)
-  # summary.print_(sum1)
 
-  return state, done, hidden_state, prev_timestep
+  return state, done, hidden_state, prev_timestep, info
 
 def test(num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_dir, input_model):
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
@@ -71,41 +62,8 @@ def test(num_tests, task_name, file_index, num_actions, starting_request, max_re
     hidden_state = model.init_hidden_state(1).to(DEVICE)
     prev_timestep = 0
 
-    # tr = tracker.SummaryTracker()
-
-    # all_objects = muppy.get_objects()
-    # sum1 = summary.summarize(all_objects)
-    # summary.print_(sum1)
-
     while not done:
-      # Prints out a summary of the large objects
-      # lists = [ao for ao in all_objects if isinstance(ao, list)]
-      # print(lists)
-
-      state, done, hidden_state, prev_timestep = run(state, model, hidden_state, num_feature, prev_timestep, env)
-    # sum1 = summary.summarize(all_objects)
-    # summary.print_(sum1)
-      # print("========================")
-      # objgraph.show_most_common_types()
-      # tr.print_diff() 
-
-      # state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
-      # dist, _, hidden_state = model(state, hidden_state)
-      # action = dist.sample().cpu().numpy()[0]
-      # # action = random.randint(0, 29)
-      # state, _, done, info = env.step(action)
-      
-      # if info["timestep"] >= 2200000:
-      #   all_objects = muppy.get_objects()
-      #   sum1 = summary.summarize(all_objects)
-      #   summary.print_(sum1)
-      #   print("Current timestep: {}".format(info["timestep"]))
-      #   prev_timestep = info["timestep"]
-      #   gc.collect()
-        # gc.collect()
-        # all_objects = muppy.get_objects()
-        # sum1 = summary.summarize(all_objects)
-        # summary.print_(sum1)
+      state, done, hidden_state, prev_timestep, info = run(state, model, hidden_state, num_feature, prev_timestep, env)
 
     print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
 
