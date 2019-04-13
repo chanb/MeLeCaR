@@ -5,7 +5,6 @@ from torch.distributions import Categorical
 from rl_models.model_init import weight_init
 from config import DEVICE
 
-
 class GRUActorCritic(nn.Module):
   def __init__(self, output_size, input_size, hidden_size=256):
     super(GRUActorCritic, self).__init__()

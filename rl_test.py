@@ -2,20 +2,41 @@ import argparse
 import gym
 import numpy as np
 import torch
-import torch.optim as optim
 import os
 import gc
+import random
+
+from memory_profiler import profile
+from pympler import summary, muppy, refbrowser
+import objgraph
 
 from config import *
-from rl_algos.reinforce import Reinforce
-from rl_algos.a2c import AdvantageActorCritic
-from rl_models.gru import GRUActorCritic, GRUPolicy
-from utils.sampler import Sampler
+import rl_envs
+# from rl_envs.multiprocessing_env import SubprocVecEnv
 from utils.parser_util import str2bool
 
-def test(algo, model_type, num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_dir, input_model):
-  assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
-  assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
+# @profile
+def run(state, model, hidden_state, num_feature, prev_timestep, env):
+  state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
+
+  with torch.no_grad():
+    dist, _, hidden_state = model(state, hidden_state)
+
+  action = dist.sample().cpu().numpy()[0]
+  state, reward, done, info = env.step(action)
+  
+  if info["timestep"] - prev_timestep >= 100000:
+    print("Current timestep: {}".format(info["timestep"]))
+    prev_timestep = info["timestep"]
+    print(info["hit"])
+    gc.collect()
+  # all_objects = muppy.get_objects()
+  # sum1 = summary.summarize(all_objects)
+  # summary.print_(sum1)
+
+  return state, done, hidden_state, prev_timestep
+
+def test(num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_dir, input_model):
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
   assert file_index in FILE_INDEX, "Invalid file index. Choices: {}".format(FILE_INDEX)
   assert num_actions in CACHE_SIZE, "Invalid number of actions. Choices: {}".format(CACHE_SIZE)
@@ -38,6 +59,7 @@ def test(algo, model_type, num_tests, task_name, file_index, num_actions, starti
   model = torch.load(model_full_path, map_location=MAP_LOCATION)
   model.eval()
 
+  print("Test task: {}".format(task_name))
   print("Input model: {}".format(model_full_path))
   print("Starting request: {}".format(starting_request))
 
@@ -49,16 +71,41 @@ def test(algo, model_type, num_tests, task_name, file_index, num_actions, starti
     hidden_state = model.init_hidden_state(1).to(DEVICE)
     prev_timestep = 0
 
-    while not done:
-      state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
-      dist, _, hidden_state = model(state, hidden_state)
-      action = dist.sample().cpu().numpy()[0]
-      state, reward, done, info = env.step(action)
+    # tr = tracker.SummaryTracker()
 
-      if info["timestep"] - prev_timestep > 100000:
-        print("Current timestep: {}".format(info["timestep"]))
-        prev_timestep = info["timestep"]
-        gc.collect()
+    # all_objects = muppy.get_objects()
+    # sum1 = summary.summarize(all_objects)
+    # summary.print_(sum1)
+
+    while not done:
+      # Prints out a summary of the large objects
+      # lists = [ao for ao in all_objects if isinstance(ao, list)]
+      # print(lists)
+
+      state, done, hidden_state, prev_timestep = run(state, model, hidden_state, num_feature, prev_timestep, env)
+    # sum1 = summary.summarize(all_objects)
+    # summary.print_(sum1)
+      # print("========================")
+      # objgraph.show_most_common_types()
+      # tr.print_diff() 
+
+      # state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
+      # dist, _, hidden_state = model(state, hidden_state)
+      # action = dist.sample().cpu().numpy()[0]
+      # # action = random.randint(0, 29)
+      # state, _, done, info = env.step(action)
+      
+      # if info["timestep"] >= 2200000:
+      #   all_objects = muppy.get_objects()
+      #   sum1 = summary.summarize(all_objects)
+      #   summary.print_(sum1)
+      #   print("Current timestep: {}".format(info["timestep"]))
+      #   prev_timestep = info["timestep"]
+      #   gc.collect()
+        # gc.collect()
+        # all_objects = muppy.get_objects()
+        # sum1 = summary.summarize(all_objects)
+        # summary.print_(sum1)
 
     print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
 
@@ -70,8 +117,6 @@ def test(algo, model_type, num_tests, task_name, file_index, num_actions, starti
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument("--algo", help="the rl algorithm to use", type=str, choices=ALGOS, default="reinforce")
-  parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="gru", help="the model architecture to train")
   parser.add_argument('--num_tests', type=int, default=10, help='number of tests to perform')
 
   parser.add_argument("--task_name", type=str, help="the task to learn", default="home", choices=TASKS)
@@ -85,4 +130,4 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  test(args.algo, args.model_type, args.num_tests, args.task_name, args.file_index, args.num_actions, args.starting_request, args.max_requests, args.input_dir, args.input_model)
+  test(args.num_tests, args.task_name, args.file_index, args.num_actions, args.starting_request, args.max_requests, args.input_dir, args.input_model)

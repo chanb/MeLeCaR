@@ -6,14 +6,19 @@ from sklearn.preprocessing import normalize
 from collections import defaultdict
 from config import ENV_LOCATION_PREFIX
 
+from memory_profiler import profile
+from pympler import summary, muppy
+
 import gym
 from gym import spaces
 
 class CacheBandit(gym.Env):
+  # @profile
   def __init__(self, cache_size, workload, max_requests=-1):
     print("WORKLOAD: {} CACHE SIZE: {} MAX_REQUESTS: {}".format(workload, cache_size, max_requests))
     self._hit = 0
     self.cache_size = cache_size
+    self.max_requests = max_requests
     self.workload = ENV_LOCATION_PREFIX + workload
 
     self.action_space = spaces.Discrete(self.cache_size)
@@ -37,7 +42,7 @@ class CacheBandit(gym.Env):
 
     self._fill_until_evict()
 
-
+  # @profile
   def _compute_state(self):
     recency = []
     frequency = []
@@ -99,12 +104,42 @@ class CacheBandit(gym.Env):
           self._cache.append(request_block)
           self._lru.append(request_block)
           self._counter += 1
+
+    # while not needs_evict and len(self._stream) != 0:
+    #   request_block = self._stream[0]
+    #   self._stream = self._stream[1:]
+    #   self._lfu[request_block] += 1
+
+    #   if request_block in self._cache:
+    #     # Cache Hit
+    #     self._lru.remove(request_block)
+    #     self._lru.append(request_block)
+    #     self._counter += 1
+    #     self._hit += 1
+    #   else:
+    #     # Cache Miss
+    #     if len(self._cache) == self.cache_size:
+    #       # Agent needs to choose victim block for request block
+    #       needs_evict = True
+    #     else:
+    #       # Cache is not full
+    #       self._cache.append(request_block)
+    #       self._lru.append(request_block)
+    #       self._counter += 1
+
     
 
   # Reset to a specified starting point
   def reset(self, starting_request=0):
     assert starting_request < self._size, "Starting point ({}) is after the request stream ({})".format(starting_point, self._size)
     print("Reset starting request to {}".format(starting_request))
+    # df = pd.read_csv(self.workload, sep=' ',header = None)
+    # df.columns = ['timestamp','pid','pname','blockNo', \
+    #               'blockSize', 'readOrWrite', 'bdMajor', 'bdMinor', 'hash']
+
+    # Normalize abs position
+    # self._stream = df['blockNo'].values[starting_request:self.max_requests]
+    # self._stream = self._stream / max(self._stream)
     self._hit = 0
     self._counter = starting_request
     self._starting_request = starting_request
@@ -114,13 +149,15 @@ class CacheBandit(gym.Env):
     self._fill_until_evict()
     return self._compute_state()
 
-
+  # @profile(precision=10)
   def step(self, action):
     assert self.action_space.contains(action)
 
     # Clear out victim block in cache
     victim_block = self._cache[action]
     request_block = self._stream[self._counter]
+    # request_block = self._stream[0]
+    # self._stream = self._stream[1:]
     
     self._lru.remove(victim_block)
     del self._lfu[victim_block]
@@ -135,8 +172,10 @@ class CacheBandit(gym.Env):
     
     # Find the next timestep where we need to evict again
     self._fill_until_evict()
+    state = self._compute_state()
+    
     # gc.collect()
-    return self._compute_state(), (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit, "starting_request": self._starting_request}
+    return state, (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit, "starting_request": self._starting_request}
 
 
   def get_max_request(self):

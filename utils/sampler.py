@@ -218,8 +218,8 @@ class Sampler():
     
     if self.num_workers > 0:
       info = info[0]
-    print("Leftover requests - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], (info["timestep"] - info["starting_request"])))
-
+      
+    print("Leftover requests - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
     # Compute the return
     state = self.generate_state_vector(done, reward, self.num_actions, action, state)
     with torch.no_grad():
