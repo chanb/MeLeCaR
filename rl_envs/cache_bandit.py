@@ -14,7 +14,6 @@ class CacheBandit(gym.Env):
     print("WORKLOAD: {} CACHE SIZE: {} MAX_REQUESTS: {}".format(workload, cache_size, max_requests))
     self._hit = 0
     self.cache_size = cache_size
-    self.max_requests = max_requests
     self.workload = ENV_LOCATION_PREFIX + workload
 
     self.action_space = spaces.Discrete(self.cache_size)
@@ -38,7 +37,7 @@ class CacheBandit(gym.Env):
 
     self._fill_until_evict()
 
-  # @profile
+
   def _compute_state(self):
     recency = []
     frequency = []
@@ -115,7 +114,7 @@ class CacheBandit(gym.Env):
     self._fill_until_evict()
     return self._compute_state()
 
-  # @profile(precision=10)
+  
   def step(self, action):
     assert self.action_space.contains(action)
 
@@ -138,7 +137,6 @@ class CacheBandit(gym.Env):
     self._fill_until_evict()
     state = self._compute_state()
     
-    # gc.collect()
     return state, (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit, "starting_request": self._starting_request}
 
 

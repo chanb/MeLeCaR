@@ -61,13 +61,14 @@ def test(num_tests, task_name, file_index, num_actions, starting_request, max_re
     done = False
     hidden_state = model.init_hidden_state(1).to(DEVICE)
     prev_timestep = 0
+    result = None
 
     while not done:
-      state, done, hidden_state, prev_timestep, info = run(state, model, hidden_state, num_feature, prev_timestep, env)
+      state, done, hidden_state, prev_timestep, result = run(state, model, hidden_state, num_feature, prev_timestep, env)
 
-    print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
+    print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(result["hit"], result["timestep"] - result["starting_request"], result["hit"]/(result["timestep"] - result["starting_request"])))
 
-    hit_rates.append(info["hit"]/(info["timestep"] - info["starting_request"]))
+    hit_rates.append(result["hit"]/(result["timestep"] - result["starting_request"]))
 
   hit_rates = np.array(hit_rates)
   print("Average: {}\tStandard Deviation: {}".format(np.average(hit_rates), np.std(hit_rates)))
