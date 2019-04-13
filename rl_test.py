@@ -10,19 +10,18 @@ import rl_envs
 from utils.parser_util import str2bool
 
 # @profile
-def run(state, model, hidden_state, num_feature, prev_timestep, env):
+def run(state, model, hidden_state, num_feature, prev_timestep, env, starting_request):
   state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
 
   with torch.no_grad():
     dist, _, hidden_state = model(state, hidden_state)
 
   action = dist.sample().cpu().numpy()[0]
-  state, reward, done, info = env.step(action)
+  state, _, done, info = env.step(action)
   
   if info["timestep"] - prev_timestep >= 100000:
-    print("Current timestep: {}".format(info["timestep"]))
+    print("Current timestep: {}\tHit: {}\tHitrate: {}".format(info["timestep"], info["hit"], info["hit"]/(info["timestep"] - starting_request)))
     prev_timestep = info["timestep"]
-    print(info["hit"])
     gc.collect()
 
   return state, done, hidden_state, prev_timestep, info
@@ -64,7 +63,7 @@ def test(num_tests, task_name, file_index, num_actions, starting_request, max_re
     result = None
 
     while not done:
-      state, done, hidden_state, prev_timestep, result = run(state, model, hidden_state, num_feature, prev_timestep, env)
+      state, done, hidden_state, prev_timestep, result = run(state, model, hidden_state, num_feature, prev_timestep, env, starting_request)
 
     print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(result["hit"], result["timestep"] - result["starting_request"], result["hit"]/(result["timestep"] - result["starting_request"])))
 
