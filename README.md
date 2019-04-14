@@ -10,7 +10,8 @@ We attemp to create a cache eviction policy using multi-label multi-class superv
 - Actor Critic: Fails to achieve near optimal  
 
 
-### Models Training:
+### Models Training:  
+NOTE: Current training are all done on CASA-6  
 **Cache Size: 10**  
 - Number of trajectories: 1 (length of 10000)
 - Number of epochs: 5000
