@@ -11,7 +11,7 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done, gamma, tau, num_workers, task_name, file_index, num_actions, max_requests, starting_request, random_start, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix):
+def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done, gamma, tau, num_workers, task_name, file_index, num_actions, max_requests, starting_request, random_start, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix, save_interval):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
@@ -19,6 +19,8 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done,
   assert num_actions in CACHE_SIZE, "Invalid number of actions. Choices: {}".format(CACHE_SIZE)
   assert max_requests in MAX_REQUESTS, "Invalid maximum requests allowed. Choices: {}".format(MAX_REQUESTS)
   assert num_workers >= 0, "Invalid number of workers ({}). Must be at least 0.".format(num_workers)
+  assert num_epochs >= 1, "Invalid number of epochs ({}). Must be at least 1.".format(num_epochs)
+  assert 1 <= save_interval <= num_epochs, "Invalid save interval ({}). Must be between 1 and {}".format(save_interval, num_epochs)
 
   num_feature = num_actions * 3
 
@@ -62,7 +64,7 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done,
     sampler.concat_storage()
     agent.update(sampler)
 
-    if ((epoch + 1) % 50 == 0):
+    if ((epoch + 1) % save_interval == 0):
       out_file = '{}/{}_{}.pkl'.format(output_dir.rstrip("/"), output_prefix, epoch)
       print("Saving model as {}".format(out_file))
       torch.save(model, out_file)
@@ -96,7 +98,8 @@ if __name__ == '__main__':
 
   parser.add_argument("--output_dir", type=str, help="the directory to save the models", required=True)
   parser.add_argument("--output_prefix", type=str, help="the model prefix to save", required=True)
+  parser.add_argument("--save_interval", type=int, help="how often to save the model", default=50)
 
   args = parser.parse_args()
 
-  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.stop_at_done, args.gamma, args.tau, args.num_workers, args.task_name, args.file_index, args.num_actions, args.max_requests, args.starting_request, args.random_start, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix)
+  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.stop_at_done, args.gamma, args.tau, args.num_workers, args.task_name, args.file_index, args.num_actions, args.max_requests, args.starting_request, args.random_start, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix, args.save_interval)
