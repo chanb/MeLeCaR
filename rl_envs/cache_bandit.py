@@ -99,6 +99,7 @@ class CacheBandit(gym.Env):
           self._cache.append(request_block)
           self._lru.append(request_block)
           self._counter += 1
+    return self._counter >= self._size
     
 
   # Reset to a specified starting point
@@ -134,10 +135,10 @@ class CacheBandit(gym.Env):
     curr_timestep = self._counter
     
     # Find the next timestep where we need to evict again
-    self._fill_until_evict()
+    done = self._fill_until_evict()
     state = self._compute_state()
     
-    return state, (self._counter - curr_timestep), self._counter >= self._size, {"workload": self.workload, "timestep": self._counter, "hit": self._hit, "starting_request": self._starting_request}
+    return state, (self._counter - curr_timestep), done, {"workload": self.workload, "timestep": self._counter, "hit": self._hit, "starting_request": self._starting_request}
 
 
   def get_max_request(self):
