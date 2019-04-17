@@ -11,7 +11,7 @@ from gym import spaces
 
 class CacheBandit(gym.Env):
   def __init__(self, cache_size, workload, max_requests=-1):
-    assert cache_size >= max_requests, "There is nothing fun about this environment! Cache size ({}) should be smaller than maximum requests ({})".format(cache_size, max_requests)
+    assert cache_size < max_requests, "There is nothing fun about this environment! Cache size ({}) should be smaller than maximum requests ({})".format(cache_size, max_requests)
     print("WORKLOAD: {} CACHE SIZE: {} MAX_REQUESTS: {}".format(workload, cache_size, max_requests))
     self._hit = 0
     self.cache_size = cache_size
