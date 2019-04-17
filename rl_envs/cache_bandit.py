@@ -117,7 +117,7 @@ class CacheBandit(gym.Env):
       self._lru = []
       self._cache = []
       env_done = self._fill_until_evict()
-      assert env_done and starting_request == 0, "This workload {} with max request {} and cache size {} doesn't need to evict any pages.".format(self.workload, self.max_requests, self.cache_size)
+      assert not env_done and starting_request == 0, "This workload {} with max request {} and cache size {} doesn't need to evict any pages.".format(self.workload, self.max_requests, self.cache_size)
       starting_request = random.randint(0, max(0, starting_request - 1))
     return self._compute_state()
 
