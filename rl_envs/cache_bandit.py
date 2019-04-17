@@ -11,10 +11,12 @@ from gym import spaces
 
 class CacheBandit(gym.Env):
   def __init__(self, cache_size, workload, max_requests=-1):
+    assert cache_size >= max_requests, "There is nothing fun about this environment! Cache size ({}) should be smaller than maximum requests ({})".format(cache_size, max_requests)
     print("WORKLOAD: {} CACHE SIZE: {} MAX_REQUESTS: {}".format(workload, cache_size, max_requests))
     self._hit = 0
     self.cache_size = cache_size
     self.workload = ENV_LOCATION_PREFIX + workload
+    self.max_requests = max_requests
 
     self.action_space = spaces.Discrete(self.cache_size)
     self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.cache_size, 3), dtype=np.float32)
@@ -115,6 +117,7 @@ class CacheBandit(gym.Env):
       self._lru = []
       self._cache = []
       env_done = self._fill_until_evict()
+      assert env_done and starting_request == 0, "This workload {} with max request {} and cache size {} doesn't need to evict any pages.".format(self.workload, self.max_requests, self.cache_size)
       starting_request = random.randint(0, max(0, starting_request - 1))
     return self._compute_state()
 
