@@ -17,7 +17,7 @@ class CacheBandit(gym.Env):
     self.workload = ENV_LOCATION_PREFIX + workload
 
     self.action_space = spaces.Discrete(self.cache_size)
-    self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.cache_size, 3))
+    self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.cache_size, 3), dtype=np.float32)
 
     self._starting_request = 0
     df = pd.read_csv(self.workload, sep=' ',header = None)
@@ -115,7 +115,7 @@ class CacheBandit(gym.Env):
       self._lru = []
       self._cache = []
       env_done = self._fill_until_evict()
-      starting_request = random.randint(0, starting_request - 1)
+      starting_request = random.randint(0, max(0, starting_request - 1))
     return self._compute_state()
 
   
