@@ -105,14 +105,17 @@ class CacheBandit(gym.Env):
   # Reset to a specified starting point
   def reset(self, starting_request=0):
     assert starting_request < self._size, "Starting point ({}) is after the request stream ({})".format(starting_point, self._size)
-    print("Reset starting request to {}".format(starting_request))
-    self._hit = 0
-    self._counter = starting_request
-    self._starting_request = starting_request
-    self._lfu = defaultdict(int)
-    self._lru = []
-    self._cache = []
-    self._fill_until_evict()
+    done = False
+    while not done:
+      print("Reset starting request to {}".format(starting_request))
+      self._hit = 0
+      self._counter = starting_request
+      self._starting_request = starting_request
+      self._lfu = defaultdict(int)
+      self._lru = []
+      self._cache = []
+      done = not self._fill_until_evict()
+      starting_request = random.randint(0, starting_request - 1)
     return self._compute_state()
 
   

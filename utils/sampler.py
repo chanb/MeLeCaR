@@ -193,6 +193,7 @@ class Sampler():
 
       # Grab hidden state for the extra information
       if all(done):
+        print(done)
         if self.num_workers > 0:
           info = info[0]
         print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], info["hit"]/(info["timestep"] - info["starting_request"])))
