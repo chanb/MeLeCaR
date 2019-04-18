@@ -189,11 +189,13 @@ class Sampler():
       self.insert_storage(log_prob, state, action, reward, done, value, hidden_state, entropy)
       self.save_evaluate(action, state, reward)
 
+      del log_prob, value, hidden_state, entropy
+
       # Update to the next value
       state = next_state
       state = torch.from_numpy(state).float()
       
-      hidden_state = next_hidden_state.to(DEVICE)
+      hidden_state = next_hidden_state#.to(DEVICE)
 
       # Grab hidden state for the extra information
       if all(done):
