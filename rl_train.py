@@ -64,6 +64,9 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done,
     sampler.concat_storage()
     agent.update(sampler)
 
+    if (MAP_LOCATION == CUDA):
+      torch.cuda.empty_cache()
+
     if ((epoch + 1) % save_interval == 0):
       out_file = '{}/{}_{}.pkl'.format(output_dir.rstrip("/"), output_prefix, epoch)
       print("Saving model as {}".format(out_file))

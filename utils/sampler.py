@@ -78,13 +78,17 @@ class Sampler():
   def concat_storage(self):
     # Store in better format
     self.returns = torch.cat(self.returns).to(DEVICE)
-    self.values = torch.cat(self.values).to(DEVICE)
+    self.values = torch.cat(self.values)#.to(DEVICE)
     self.log_probs = torch.cat(self.log_probs).to(DEVICE)
     self.states = torch.cat(self.states)
     self.actions = torch.cat(self.actions)
-    self.entropies = torch.cat(self.entropies).to(DEVICE)
+    self.entropies = torch.cat(self.entropies)#.to(DEVICE)
     self.advantages = self.returns - self.values
-    self.advantages = (self.advantages - self.advantages.mean()) / (self.advantages.std() + EPS).to(DEVICE)
+    self.advantages = (self.advantages - self.advantages.mean()) / (self.advantages.std() + EPS)#.to(DEVICE)
+    for val in self.rewards:
+      val.to(CPU)
+    for val in self.masks:
+      val.to(CPU)
 
 
   # Concatenate hidden states
