@@ -17,6 +17,7 @@ class CacheBandit(gym.Env):
     self.cache_size = cache_size
     self.workload = ENV_LOCATION_PREFIX + workload
     self.max_requests = max_requests
+    self.hitrates = []
 
     self.action_space = spaces.Discrete(self.cache_size)
     self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.cache_size, 3), dtype=np.float32)
@@ -101,21 +102,25 @@ class CacheBandit(gym.Env):
           self._cache.append(request_block)
           self._lru.append(request_block)
           self._counter += 1
+      if self._counter % 10 == 0:
+        self.hitrates.append(self._hit / self._counter)
     return self._counter >= self._size
     
 
   # Reset to a specified starting point
   def reset(self, starting_request=0):
     assert starting_request < self._size, "Starting point ({}) is after the request stream ({})".format(starting_point, self._size)
+    self._hit = 0
+    self._lfu = defaultdict(int)
+    self._lru = []
+    self._cache = []
+    self.hitrates = []
+
     env_done = True
     while env_done:
       print("Reset starting request to {}".format(starting_request))
-      self._hit = 0
       self._counter = starting_request
       self._starting_request = starting_request
-      self._lfu = defaultdict(int)
-      self._lru = []
-      self._cache = []
       env_done = self._fill_until_evict()
       assert not env_done or starting_request > 0, "This workload {} with max request {} and cache size {} doesn't need to evict any pages.".format(self.workload, self.max_requests, self.cache_size)
       starting_request = random.randint(0, max(0, starting_request - 1))
@@ -138,6 +143,8 @@ class CacheBandit(gym.Env):
     self._lru.append(request_block)
     self._lfu[request_block] = 1
     self._counter += 1
+    if self._counter % 10 == 0:
+      self.hitrates.append(self._hit / self._counter)
     curr_timestep = self._counter
     
     # Find the next timestep where we need to evict again

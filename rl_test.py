@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import os
 import gc
+import pickle
 
 from config import *
 import rl_envs
@@ -26,7 +27,7 @@ def run(state, model, hidden_state, num_feature, prev_timestep, env, starting_re
 
   return state, done, hidden_state, prev_timestep, info
 
-def test(num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_dir, input_model):
+def test(num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_dir, input_model, output_result):
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
   assert file_index in FILE_INDEX, "Invalid file index. Choices: {}".format(FILE_INDEX)
   assert num_actions in CACHE_SIZE, "Invalid number of actions. Choices: {}".format(CACHE_SIZE)
@@ -60,17 +61,35 @@ def test(num_tests, task_name, file_index, num_actions, starting_request, max_re
     done = False
     hidden_state = model.init_hidden_state(1).to(DEVICE)
     prev_timestep = 0
-    result = None
 
     while not done:
-      state, done, hidden_state, prev_timestep, result = run(state, model, hidden_state, num_feature, prev_timestep, env, starting_request)
+      state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
 
-    print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(result["hit"], result["timestep"] - result["starting_request"], result["hit"]/(result["timestep"] - result["starting_request"])))
+      with torch.no_grad():
+        dist, _, hidden_state = model(state, hidden_state)
 
-    hit_rates.append(result["hit"]/(result["timestep"] - result["starting_request"]))
+      action = dist.sample().cpu().numpy()[0]
+      state, _, done, info = env.step(action)
+      
+      if env._counter - prev_timestep >= 500000:
+        print("Current timestep: {}\tHit: {}\tHitrate: {}".format(info["timestep"], info["hit"], info["hit"]/(info["timestep"] - starting_request)))
+        prev_timestep = env._counter
+        gc.collect()
+
+
+    final_hitrate = info["hit"]/(info["timestep"] - info["starting_request"])
+    with open("{:02d}_{}".format(i, output_result), 'wb+') as f:
+      pickle.dump([env.hitrates, final_hitrate], f)
+
+
+    print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(result["hit"], result["timestep"] - result["starting_request"], final_hitrate))
+
+    hit_rates.append(final_hitrate)
 
   hit_rates = np.array(hit_rates)
   print("Average: {}\tStandard Deviation: {}".format(np.average(hit_rates), np.std(hit_rates)))
+  with open("final_{}".format(i, output_result), 'wb+') as f:
+    pickle.dump([hit_rates, np.average(hit_rates), np.std(hit_rates)], f)
 
 
 if __name__ == '__main__':
@@ -85,7 +104,8 @@ if __name__ == '__main__':
 
   parser.add_argument("--input_dir", type=str, help="the directory to load the models from", required=True)
   parser.add_argument("--input_model", type=str, help="the model to load", required=True)
+  parser.add_argument("--output_result", type=str, help="the file to store the results", required=True)
 
   args = parser.parse_args()
 
-  test(args.num_tests, args.task_name, args.file_index, args.num_actions, args.starting_request, args.max_requests, args.input_dir, args.input_model)
+  test(args.num_tests, args.task_name, args.file_index, args.num_actions, args.starting_request, args.max_requests, args.input_dir, args.input_model, args.output_result)
