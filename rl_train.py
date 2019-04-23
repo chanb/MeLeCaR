@@ -32,7 +32,7 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done,
     model = GRUPolicy(num_actions, num_feature)
     # Set the optimizer
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    agent = Reinforce(model, optimizer)
+    agent = Reinforce(model, optimizer, entropy_coef)
   elif(model_type == GRU and algo == A2C):
     model = GRUActorCritic(num_actions, num_feature)
     # Set the optimizer
@@ -60,18 +60,19 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done,
     sampler.reset_storage()
     sampler.last_hidden_state = None
 
+    if (MAP_LOCATION == CUDA):
+      torch.cuda.empty_cache()
+
     sampler.sample(batch_size, stop_at_done=stop_at_done, starting_point=get_starting_point(sampler.max_length))
     sampler.concat_storage()
     agent.update(sampler)
-
-    if (MAP_LOCATION == CUDA):
-      torch.cuda.empty_cache()
 
     if ((epoch + 1) % save_interval == 0):
       out_file = '{}/{}_{}.pkl'.format(output_dir.rstrip("/"), output_prefix, epoch)
       print("Saving model as {}".format(out_file))
       torch.save(model, out_file)
-    
+  
+  print("DONE")
 
   sampler.envs.close()
 
