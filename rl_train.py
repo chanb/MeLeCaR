@@ -53,6 +53,8 @@ def train(algo, opt, model_type, batch_size, learning_rate, num_epochs, stop_at_
 
   get_starting_point = _random_start if random_start else lambda x: starting_request
 
+  print(optimizer)
+  print(model)
   print("Stop after singlefull trajectory is completed for each epoch: {}".format(stop_at_done))
   print("Output Directory: {}".format(output_dir))
   if not os.path.isdir(output_dir):
