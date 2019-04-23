@@ -8,7 +8,6 @@ class Reinforce:
 
 
   def update(self, sampler):
-    #TODO: Add entropy term
     log_probs = sampler.log_probs
     returns = sampler.returns
     ent = sampler.entropies

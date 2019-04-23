@@ -11,8 +11,9 @@ from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
 from utils.parser_util import str2bool
 
-def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done, gamma, tau, num_workers, task_name, file_index, num_actions, max_requests, starting_request, random_start, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix, save_interval):
+def train(algo, opt, model_type, batch_size, learning_rate, num_epochs, stop_at_done, gamma, tau, num_workers, task_name, file_index, num_actions, max_requests, starting_request, random_start, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix, save_interval):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
+  assert opt in OPT_TYPES, "Invalid optimizer type. Choices: {}".format(OPT_TYPES)
   assert algo in ALGOS, "Invalid algorithm. Choices: {}".format(ALGOS)
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
   assert file_index in FILE_INDEX, "Invalid file index. Choices: {}".format(FILE_INDEX)
@@ -27,16 +28,18 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done,
   # Setup environment
   task_name = "Cache-Bandit-C{}-Max{}-{}-{}-v0".format(num_actions, max_requests, task_name, file_index)
 
+  opt_construct = optim.Adam if opt == OPT_ADAM else optim.SGD
+
   # Create the model
   if (model_type == GRU and algo == REINFORCE):
     model = GRUPolicy(num_actions, num_feature)
     # Set the optimizer
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = opt_construct(model.parameters(), lr=learning_rate)
     agent = Reinforce(model, optimizer, entropy_coef)
   elif(model_type == GRU and algo == A2C):
     model = GRUActorCritic(num_actions, num_feature)
     # Set the optimizer
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = opt_construct(model.parameters(), lr=learning_rate)
     agent = AdvantageActorCritic(model, optimizer, critic_coef, actor_coef, entropy_coef)
 
   model = model.to(DEVICE)
@@ -80,6 +83,7 @@ def train(algo, model_type, batch_size, learning_rate, num_epochs, stop_at_done,
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("--algo", help="the rl algorithm to use", type=str, choices=ALGOS, default="reinforce")
+  parser.add_argument("--opt", help="the optimizer to use", type=str, choices=OPT_TYPES, default=OPT_ADAM)
   parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="gru", help="the model architecture to train")
   parser.add_argument("--batch_size", type=int, help="batch size (number of timesteps taken)", default=128)
   parser.add_argument("--learning_rate", type=float, help="learning rate", default=1e-3)
@@ -106,4 +110,4 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  train(args.algo, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.stop_at_done, args.gamma, args.tau, args.num_workers, args.task_name, args.file_index, args.num_actions, args.max_requests, args.starting_request, args.random_start, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix, args.save_interval)
+  train(args.algo, args.opt, args.model_type, args.batch_size, args.learning_rate, args.num_epochs, args.stop_at_done, args.gamma, args.tau, args.num_workers, args.task_name, args.file_index, args.num_actions, args.max_requests, args.starting_request, args.random_start, args.critic_coef, args.actor_coef, args.entropy_coef, args.output_dir, args.output_prefix, args.save_interval)
