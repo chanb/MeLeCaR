@@ -10,22 +10,6 @@ from config import *
 import rl_envs
 from utils.parser_util import str2bool
 
-# @profile
-def run(state, model, hidden_state, num_feature, prev_timestep, env, starting_request):
-  state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
-
-  with torch.no_grad():
-    dist, _, hidden_state = model(state, hidden_state)
-
-  action = dist.sample().cpu().numpy()[0]
-  state, _, done, info = env.step(action)
-  
-  if info["timestep"] - prev_timestep >= 100000:
-    print("Current timestep: {}\tHit: {}\tHitrate: {}".format(info["timestep"], info["hit"], info["hit"]/(info["timestep"] - starting_request)))
-    prev_timestep = info["timestep"]
-    gc.collect()
-
-  return state, done, hidden_state, prev_timestep, info
 
 def test(num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_dir, input_model, output_result):
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
@@ -61,6 +45,7 @@ def test(num_tests, task_name, file_index, num_actions, starting_request, max_re
     done = False
     hidden_state = model.init_hidden_state(1).to(DEVICE)
     prev_timestep = 0
+    info = None
 
     while not done:
       state = torch.from_numpy(state.reshape(1, 1, num_feature)).float().to(DEVICE)
@@ -82,7 +67,7 @@ def test(num_tests, task_name, file_index, num_actions, starting_request, max_re
       pickle.dump([env.hitrates, final_hitrate], f)
 
 
-    print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(result["hit"], result["timestep"] - result["starting_request"], final_hitrate))
+    print("All requests are processed - Number of hits: {}\tNumber of requests: {}\tHit Ratio: {}".format(info["hit"], info["timestep"] - info["starting_request"], final_hitrate))
 
     hit_rates.append(final_hitrate)
 
