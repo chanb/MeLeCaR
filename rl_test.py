@@ -11,16 +11,16 @@ import rl_envs
 from utils.parser_util import str2bool
 
 
-def test(num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_dir, input_model, output_result):
+def test(num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_model, output_dir, output_name):
   assert task_name in TASKS, "Invalid task. Choices: {}".format(TASKS)
   assert file_index in FILE_INDEX, "Invalid file index. Choices: {}".format(FILE_INDEX)
   assert num_actions in CACHE_SIZE, "Invalid number of actions. Choices: {}".format(CACHE_SIZE)
   assert max_requests in MAX_REQUESTS, "Invalid maximum requests allowed. Choices: {}".format(MAX_REQUESTS)
-  assert os.path.isdir(input_dir), "Input directory {} doesn't exist".format(input_dir)
+  assert os.path.isfile(input_model), "Input model {} doesn't exist".format(input_model)
 
-  model_full_path = input_dir.rstrip("/") + "/" + input_model
-
-  assert os.path.isfile(model_full_path), "Input model {} doesn't exist".format(model_full_path)
+  if not os.path.isdir(output_dir):
+    print("Constructing directories {}".format(output_dir))
+    os.makedirs(output_dir, exist_ok=True)
 
   num_feature = num_actions * 3
 
@@ -31,11 +31,11 @@ def test(num_tests, task_name, file_index, num_actions, starting_request, max_re
   env = gym.make(task_name)
 
   # Create the model
-  model = torch.load(model_full_path, map_location=MAP_LOCATION)
+  model = torch.load(input_model, map_location=MAP_LOCATION)
   model.eval()
 
   print("Test task: {}".format(task_name))
-  print("Input model: {}".format(model_full_path))
+  print("Input model: {}".format(input_model))
   print("Starting request: {}".format(starting_request))
 
   hit_rates = []
@@ -63,7 +63,7 @@ def test(num_tests, task_name, file_index, num_actions, starting_request, max_re
 
 
     final_hitrate = info["hit"]/(info["timestep"] - info["starting_request"])
-    with open("{:02d}_{}".format(i, output_result), 'wb+') as f:
+    with open("{}/{:02d}_{}".format(output_dir.rstrip("/"), i, output_name), 'wb+') as f:
       pickle.dump([env.hitrates, final_hitrate], f)
 
 
@@ -73,7 +73,7 @@ def test(num_tests, task_name, file_index, num_actions, starting_request, max_re
 
   hit_rates = np.array(hit_rates)
   print("Average: {}\tStandard Deviation: {}".format(np.average(hit_rates), np.std(hit_rates)))
-  with open("final_{}".format(i, output_result), 'wb+') as f:
+  with open("{}/final_{}".format(output_dir.rstrip("/"), output_name), 'wb+') as f:
     pickle.dump([hit_rates, np.average(hit_rates), np.std(hit_rates)], f)
 
 
@@ -87,10 +87,10 @@ if __name__ == '__main__':
   parser.add_argument("--max_requests", type=int, help="the maximum number of requests from workload", default=50000, choices=MAX_REQUESTS)
   parser.add_argument("--starting_request", type=int, help="the starting request from workload", default=10000)
 
-  parser.add_argument("--input_dir", type=str, help="the directory to load the models from", required=True)
-  parser.add_argument("--input_model", type=str, help="the model to load", required=True)
-  parser.add_argument("--output_result", type=str, help="the file to store the results", required=True)
+  parser.add_argument("--input_model", type=str, help="the full path of model to load", required=True)
+  parser.add_argument("--output_dir", type=str, help="the directory to save the results", required=True)
+  parser.add_argument("--output_name", type=str, help="the file name to store the results", required=True)
 
   args = parser.parse_args()
 
-  test(args.num_tests, args.task_name, args.file_index, args.num_actions, args.starting_request, args.max_requests, args.input_dir, args.input_model, args.output_result)
+  test(args.num_tests, args.task_name, args.file_index, args.num_actions, args.starting_request, args.max_requests, args.input_model, args.output_dir, args.output_name)

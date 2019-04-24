@@ -56,9 +56,12 @@ def train(algo, opt, model_type, batch_size, learning_rate, num_epochs, stop_at_
   print(optimizer)
   print(model)
   print("Stop after singlefull trajectory is completed for each epoch: {}".format(stop_at_done))
-  print("Output Directory: {}".format(output_dir))
+
   if not os.path.isdir(output_dir):
+    print("Constructing directories {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
+
+  print("Output Directory: {}".format(output_dir))
 
   for epoch in range(num_epochs):
     print("EPOCH {} ==========================================".format(epoch))
