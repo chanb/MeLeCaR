@@ -4,7 +4,7 @@ import random
 import gc
 from sklearn.preprocessing import normalize
 from collections import defaultdict
-from config import ENV_LOCATION_PREFIX
+from config import ENV_LOCATION_PREFIX, SAVE_INTERVAL
 
 import gym
 from gym import spaces
@@ -80,9 +80,7 @@ class CacheBandit(gym.Env):
 
   # Find the next time where we need to perform an eviction
   def _fill_until_evict(self):
-    needs_evict = False
-
-    while not needs_evict and self._counter < self._size:
+    while self._counter < self._size:
       request_block = self._stream[self._counter]
       self._lfu[request_block] += 1
 
@@ -96,13 +94,13 @@ class CacheBandit(gym.Env):
         # Cache Miss
         if len(self._cache) == self.cache_size:
           # Agent needs to choose victim block for request block
-          needs_evict = True
+          return self._counter >= self._size
         else:
           # Cache is not full
           self._cache.append(request_block)
           self._lru.append(request_block)
           self._counter += 1
-      if self._counter % 10 == 0:
+      if self._counter % SAVE_INTERVAL == 0:
         self.hitrates.append(self._hit / self._counter)
     return self._counter >= self._size
     
@@ -143,7 +141,7 @@ class CacheBandit(gym.Env):
     self._lru.append(request_block)
     self._lfu[request_block] = 1
     self._counter += 1
-    if self._counter % 10 == 0:
+    if self._counter % SAVE_INTERVAL == 0:
       self.hitrates.append(self._hit / self._counter)
     curr_timestep = self._counter
     

@@ -1,6 +1,6 @@
 # MeLeCaR
 
-We attemp to create a cache eviction policy using multi-label multi-class supervised learning and reinforcement learning. For reinforcement learning context, we treat the problem as a multi-armed bandit problem, with action space equals to the cache size.  
+We attempt to create a cache eviction policy using multi-label multi-class supervised learning and reinforcement learning. For reinforcement learning context, we treat the problem as a multi-armed bandit problem, with action space equals to the cache size.  
 
 ## Supervised Learning Approach
 - GRU Model with sequence length of 5
@@ -42,6 +42,9 @@ NOTE: Current training are all done on CASA-6
   - Number of trajectories: 1 (length of 10000)
   - Number of epochs: 5000
   - Workload: casa 6 (First 10000 requests)
+
+
+Example evaluation: `python rl_test.py --task_name=mail --file_index=3 --num_actions=30 --max_requests=25000000 --starting_request=0 --input_model=rl_saved_agents/gru_reinforce_C30_E1000_T10000.pkl  --output_name=eval_cheetah3_0-25000000_C30.pkl --output_dir=experiment_results/`
 
 
 ### Evaluation:

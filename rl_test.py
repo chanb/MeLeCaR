@@ -8,7 +8,7 @@ import pickle
 
 from config import *
 import rl_envs
-from utils.parser_util import str2bool
+from utils.parser_util import str2bool, check_max_requests
 
 
 def test(num_tests, task_name, file_index, num_actions, starting_request, max_requests, input_model, output_dir, output_name):
@@ -84,7 +84,7 @@ if __name__ == '__main__':
   parser.add_argument("--task_name", type=str, help="the task to learn", default="home", choices=TASKS)
   parser.add_argument("--file_index", type=int, help="the blocktrace file index", default=6, choices=FILE_INDEX)
   parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30, choices=CACHE_SIZE)
-  parser.add_argument("--max_requests", type=int, help="the maximum number of requests from workload", default=50000, choices=MAX_REQUESTS)
+  parser.add_argument("--max_requests", type=check_max_requests, help="the maximum number of requests from workload (Multiple of 10000, up to 25000000", default=50000)
   parser.add_argument("--starting_request", type=int, help="the starting request from workload", default=10000)
 
   parser.add_argument("--input_model", type=str, help="the full path of model to load", required=True)
