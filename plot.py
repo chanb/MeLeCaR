@@ -27,7 +27,7 @@ def plot_hitrate(experiment_name, policy_name, policy_result, baseline_result, w
   assert workload_length // (SAVE_INTERVAL * len(lru_checkpoint_hitrates)) == 1, "The workload length is shorter than provided baseline results."
   assert workload_length // (SAVE_INTERVAL * len(policy_checkpoint_hitrates)) == 1, "The workload length is shorter than provided policy result."
 
-  x_range = list(range(starting_request + ((starting_request + SAVE_INTERVAL) % SAVE_INTERVAL), workload_length + 1, SAVE_INTERVAL))
+  x_range = list(range(starting_request - (starting_request % SAVE_INTERVAL) + SAVE_INTERVAL, workload_length + 1, SAVE_INTERVAL))
 
   if workload_length != SAVE_INTERVAL * len(lru_checkpoint_hitrates):
     lru_checkpoint_hitrates.append(lru_final_hitrate)
