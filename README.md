@@ -43,6 +43,7 @@ NOTE: Current training are all done on CASA-6
   - Number of epochs: 5000
   - Workload: casa 6 (First 10000 requests)
 
+Example training: python rl_train.py --gamma=0.99 --batch_size=100000 --num_epochs=1500 --algo=reinforce --output_dir=rl_trained/reinforce_abs_norm_EPOCH1500_C100_T100000_ent0.01_home6 --save_interval=10 --output_prefix=gru_reinforce_C100_E1500_T100000_ent0.01_home6 --max_requests=100000 --task_name=home --num_actions=100 --file_index=6 --num_workers=0 --entropy_coef=0.01 |& tee reinforce_EPOCH1500_C100_T100000_ent0.01_home6.txt
 
 Example evaluation: `python rl_test.py --task_name=mail --file_index=3 --num_actions=30 --max_requests=25000000 --starting_request=0 --input_model=rl_saved_agents/gru_reinforce_C30_E1000_T10000.pkl  --output_name=eval_cheetah3_0-25000000_C30.pkl --output_dir=experiment_results/`
 
