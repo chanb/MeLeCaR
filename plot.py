@@ -14,6 +14,9 @@ def plot_hitrate(experiment_name, policy_name, policy_result, baseline_result, w
   assert workload_length > 0, "The workload length must be greater than 0."
   assert workload_length > starting_request > 0, "The starting request must be greater than 0 and less than workload length."
   
+  if not os.path.isdir('plot_hitrate'):
+    os.makedirs('plot_hitrate', exist_ok=True)
+
   with open(policy_result, 'rb') as f:
     policy_checkpoint_hitrates, policy_final_hitrate = pickle.load(f)
   
@@ -33,7 +36,6 @@ def plot_hitrate(experiment_name, policy_name, policy_result, baseline_result, w
     policy_checkpoint_hitrates.append(policy_final_hitrate)
     x_range.append(workload_length)
 
-
   plt.plot(x_range, lru_checkpoint_hitrates, label="LRU", linestyle=":")
   plt.plot(x_range, lfu_checkpoint_hitrates, label="LFU", linestyle="--")
   plt.plot(x_range, opt_checkpoint_hitrates, label="OPT", linestyle="-.")
@@ -43,6 +45,7 @@ def plot_hitrate(experiment_name, policy_name, policy_result, baseline_result, w
   plt.ylabel("Hit rate")
   plt.title("Experiment: {}".format(experiment_name))
   plt.legend()
+  plt.savefig('./plot_hitrate/{0}.png'.format(experiment_name))
 
   plt.show()
 

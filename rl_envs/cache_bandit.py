@@ -101,7 +101,7 @@ class CacheBandit(gym.Env):
           self._lru.append(request_block)
           self._counter += 1
       if self._counter % SAVE_INTERVAL == 0:
-        self.hitrates.append(self._hit / self._counter)
+        self.hitrates.append(self._hit / (self._counter - self._starting_request))
     return self._counter >= self._size
     
 
@@ -112,13 +112,13 @@ class CacheBandit(gym.Env):
     self._lfu = defaultdict(int)
     self._lru = []
     self._cache = []
-    self.hitrates = []
 
     env_done = True
     while env_done:
       print("Reset starting request to {}".format(starting_request))
       self._counter = starting_request
       self._starting_request = starting_request
+      self.hitrates = []
       env_done = self._fill_until_evict()
       assert not env_done or starting_request > 0, "This workload {} with max request {} and cache size {} doesn't need to evict any pages.".format(self.workload, self.max_requests, self.cache_size)
       starting_request = random.randint(0, max(0, starting_request - 1))
