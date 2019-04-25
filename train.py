@@ -2,68 +2,68 @@ import argparse
 import numpy as np
 import os
 import tensorflow as tf
-from tensorflow import contrib
 
-import config
+from config import *
+from utils.parser_util import str2bool
 from utils.dataset_loader import read_from_pkl
 from models.baseline_classifier import Baseline
+from models.sequence_model import SequenceModel
+from models.utils import get_full_model_name
 
-def step(model, loss_func, inputs, outputs):
-  with tf.GradientTape() as tape:
-    loss_value = loss_func(model, inputs, outputs)
-    grads = tape.gradient(loss_value, model.trainable_variables)
-  return loss_value, grads
 
-def main(input_data, output_dir, batch_size=10, learning_rate=1e-5, num_epochs=10):
-  dataset = read_from_pkl(input_data).batch(batch_size)
+# Train a model
+def train(train_data, output_dir, model_type, model_name, init_weight=None, batch_size=10, learning_rate=1e-5, num_epochs=10, split_ratio=0.3):
+  assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
+  assert 0 <= split_ratio < 1, "train/validation split needs to be within [0, 1)"
+  assert not init_weight or os.path.isfile(init_weight), "the specified weight file does not exist: {}".format(init_weight)
 
-  model = Baseline([None, 30], 10)
-  optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
-  global_step = tf.Variable(0)
-  tfe = contrib.eager
+  if not os.path.isdir(output_dir):
+    print("Creating directory {}".format(output_dir))
+    os.makedirs(output_dir)
 
-  def loss(model, inputs, outputs):
-    logits = model(inputs)
-    return tf.losses.mean_squared_error(outputs, logits)
+  inputs, outputs, input_dim, output_dim = read_from_pkl(train_data)
 
-  train_loss_results = []
+  # Initialize model & optimizer
+  if model_type == BASELINE:
+    model = Baseline([None, input_dim], output_dim)
+  elif model_type == GRU:
+    model = SequenceModel([None, input_dim], output_dim, 100)
 
-  for epoch in range(num_epochs):
-    epoch_loss_avg = tfe.metrics.Mean()
-    epoch_loss_avg.build()
-    
-    # Training Loop
-    for inputs, outputs in dataset:
-      inputs = model.modify_input(inputs)
-    
-      # Optimize the model
-      logits = model(inputs)
-      loss_value, grads = step(model, loss, inputs, outputs)
-      optimizer.apply_gradients(zip(grads, model.trainable_variables),
-                                global_step)
+  optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
+  model.compile(optimizer, loss=tf.losses.sigmoid_cross_entropy, metrics=[ACCURACY])
 
-      # Track progress
-      epoch_loss_avg.call(loss_value)
+  if init_weight:
+    model.build(inputs.shape)
+    model.load_weights(init_weight)
 
-    train_loss_results.append(epoch_loss_avg.result())    
-    print("Epoch {}: Loss: {}".format(epoch, epoch_loss_avg.result()))
+  # Train model
+  model_full_name = get_full_model_name(output_dir, model_name, model_type)
+  
+  try:
+    print("Training model...")
+    mcp_save = tf.keras.callbacks.ModelCheckpoint(model_full_name, save_best_only=True, save_weights_only=True, monitor='val_acc', mode='max', verbose=1)
+    model.fit(inputs, outputs, batch_size=batch_size, epochs=num_epochs, validation_split=split_ratio, callbacks=[mcp_save], shuffle=False)
+  except KeyboardInterrupt:
+    print("Keyboard interrupt... Exiting training")
 
-  checkpoint_prefix = os.path.join(output_dir, "ckpt")
-  root = tf.train.Checkpoint(optimizer=optimizer,
-                            model=model,
-                            optimizer_step=tf.train.get_or_create_global_step())
-
-  root.save(checkpoint_prefix)
+  # Save model
+  if split_ratio == 0:
+    print("Saving model to {}...".format(model_full_name))
+    model.save_weights(model_full_name)
 
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument("--input_data", type=str, help="the pickle file containing the training input/output pairs", required=True)
-  parser.add_argument("--output_dir", type=str, help="the output checkpoint directory", required=True)
-  parser.add_argument("--batch_size", type=int, help="batch size")
-  parser.add_argument("--learning_rate", type=float, help="learning rate")
-  parser.add_argument("--num_epochs", type=int, help="number of epochs")
-  args = parser.parse_args() 
+  parser.add_argument("--train_data", type=str, help="the pickle file containing the training data", required=True)
+  parser.add_argument("--output_dir", type=str, help="the output model directory", required=True)
+  parser.add_argument("--model_name", type=str, help="the output model name", required=True)
+  parser.add_argument("--init_weight", type=str, help="a weight file that specifies how to initialize the weights of the model")
+  parser.add_argument("--batch_size", type=int, help="batch size", default=128)
+  parser.add_argument("--learning_rate", type=float, help="learning rate", default=1e-3)
+  parser.add_argument("--num_epochs", type=int, help="number of epochs", default=100)
+  parser.add_argument("--model_type", type=str, choices=MODEL_TYPES, default="baseline", help="the model architecture to train")
+  parser.add_argument("--split_ratio", type=float, help="the training/validation split ratio", default=0.3)
+  args = parser.parse_args()
 
-  main(args.input_data, args.output_dir, args.batch_size, args.learning_rate, args.num_epochs)
+  train(args.train_data, args.output_dir, args.model_type, args.model_name, args.init_weight, args.batch_size, args.learning_rate, args.num_epochs, args.split_ratio)
 

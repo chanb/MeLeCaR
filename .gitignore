@@ -105,3 +105,6 @@ venv.bak/
 
 /**/FIU_trace
 /**/FIU_raw
+/**/*.blkparse
+/**/*.pkl
+/**/*.h5

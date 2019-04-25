@@ -7,3 +7,8 @@ def init_weight(in_dim, out_dim, name=None, stddev=1.0):
 
 def init_bias(out_dim, name=None):
   return tf.Variable(tf.zeros([out_dim]), name=name)
+
+
+def get_full_model_name(model_path, model_name, model_type):
+  model_path = model_path.rstrip("/")
+  return "{}/{}-{}.h5".format(model_path, model_name, model_type)
