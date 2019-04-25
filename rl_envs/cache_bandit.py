@@ -142,7 +142,7 @@ class CacheBandit(gym.Env):
     self._lfu[request_block] = 1
     self._counter += 1
     if self._counter % SAVE_INTERVAL == 0:
-      self.hitrates.append(self._hit / self._counter)
+      self.hitrates.append(self._hit / (self._counter - self._starting_request))
     curr_timestep = self._counter
     
     # Find the next timestep where we need to evict again
