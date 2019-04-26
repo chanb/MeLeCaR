@@ -9,7 +9,7 @@ from rl_algos.reinforce import Reinforce
 from rl_algos.a2c import AdvantageActorCritic
 from rl_models.gru import GRUActorCritic, GRUPolicy
 from utils.sampler import Sampler
-from utils.parser_util import str2bool
+from utils.parser_util import str2bool, check_max_requests
 
 def train(algo, opt, model_type, batch_size, learning_rate, num_epochs, stop_at_done, gamma, tau, num_workers, task_name, file_index, num_actions, max_requests, starting_request, random_start, critic_coef, actor_coef, entropy_coef, output_dir, output_prefix, save_interval):
   assert model_type in MODEL_TYPES, "Invalid model type. Choices: {}".format(MODEL_TYPES)
@@ -105,7 +105,7 @@ if __name__ == '__main__':
   parser.add_argument("--task_name", type=str, help="the task to learn", default="home", choices=TASKS)
   parser.add_argument("--file_index", type=int, help="the blocktrace file index", default=6, choices=FILE_INDEX)
   parser.add_argument("--num_actions", type=int, help="the number of actions in the task", default=30, choices=CACHE_SIZE)
-  parser.add_argument("--max_requests", type=int, help="the maximum number of requests from workload", default=50000, choices=MAX_REQUESTS)
+  parser.add_argument("--max_requests", type=check_max_requests, help="the maximum number of requests from workload (Multiple of 10000, up to 25000000", default=50000)
   parser.add_argument("--starting_request", type=int, help="the starting request of the workload", default=0)
   parser.add_argument("--random_start", type=str2bool, default=False, help="whether to use a random index as a starting point")
 
