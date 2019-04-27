@@ -78,8 +78,39 @@ def plot_hitrate(experiment_name, policy_name, policy_dir, policy_suffix, baseli
   plt.show()
 
 
+def parse_learning_curve(file):
+  if not os.path.isdir('plot_learning_curve'):
+    os.makedirs('plot_learning_curve', exist_ok=True)
+
+  prefix = "Number of hits: "
+  len_prefix = len(prefix)
+  suffix = "Number of requests:"
+  rewards = []
+
+  for line in file:
+    if prefix not in line:
+      continue
+    rewards.append(int(line[line.rindex(prefix) + len_prefix:line.index(suffix)].replace(" ", "")))
+
+  return rewards
+
+
 def plot_learning_curve(policy_name, policy_dir, policy_file):
-  assert os.path.isfile(policy_result), "The result file {} doesn't exist.".format(policy_result)
+  full_path = policy_dir.rstrip("/") + "/" + policy_file
+  assert os.path.isfile(full_path), "The result file {} doesn't exist.".format(full_path)
+
+  with open(full_path, 'r') as f:
+    rewards = parse_learning_curve(f)
+
+  x_range = list(range(len(rewards)))
+
+  plt.plot(x_range, rewards)
+  plt.xlabel("Training Iteration")
+  plt.ylabel("Total Return")
+  plt.title("Learning Curve: {}".format(policy_name))
+  plt.savefig('./plot_learning_curve/{0}.png'.format(policy_name))
+  plt.show()
+
 
 
 if __name__ == "__main__":
