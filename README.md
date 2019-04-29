@@ -8,9 +8,9 @@ Hyperparameters settings are provided in appendix of the PDF.
 
 ## Supervised Learning Approach
 
-- GRU Model with sequence length of 5
+We formulate this problem as a multi-label binary-class classification. Due to the nature of the problem, we decide to use GRU model with sequence length of 5.
 
-`reptile.py` is a meta-learning algorithm that optimizes for a good initialization for the model.
+`reptile.py` is a meta-learning algorithm that optimizes for a good initialization for the model. The performance has not been tested yet.
 
 ## Reinforcement Learning Approach
 
