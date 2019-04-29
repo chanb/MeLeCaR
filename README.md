@@ -2,10 +2,22 @@
 
 We attempt to create a cache eviction policy using multi-label multi-class supervised learning and reinforcement learning. For reinforcement learning context, we treat the problem as a contextual bandit problem, with action space equals to the cache size.  
 
+Please download the FIU workload files from <http://sylab-srv.cs.fiu.edu/doku.php?id=projects:iodedup:start>
+
+Hyperparameters settings are provided in appendix of the PDF.
+
 ## Supervised Learning Approach
 - GRU Model with sequence length of 5
 
 ## Reinforcement Learning Approach
+### Environment
+The formulation of the cache replacement problem can be found in the PDF. To get the environment to work, please move the workload blocktrace files `cheetah-3`, `casa-4`, `casa-5`, `casa-6` to `rl_envs` directory.
+
+### Models
+The models are stored in `rl_models`. We currently use GRU as our default architecture choice.
+
+### Algorithms
+We support both A2C and REINFORCE algorithms (See `rl_algos`). Based on quick training, we conclude the following:
 - REINFORCE: Achieve near optimal (We conduct more experiment on this)  
 - Actor Critic: Fails to achieve near optimal  
 
