@@ -112,7 +112,6 @@ def plot_learning_curve(policy_name, policy_dir, policy_file):
   plt.show()
 
 
-
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument("--type", help="the plot type", type=str, required=True, choices=PLOTS)
