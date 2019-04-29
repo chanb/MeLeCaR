@@ -33,7 +33,7 @@ We support both A2C and REINFORCE algorithms (See `rl_algos`). We allow using ei
 
 ### **Scripts**
 
-There are three scripts that are relevant to training and evaluating a RL agent: `rl_train.py`, `rl_test.py`, `plot.py`.
+There are three scripts that are relevant to training and evaluating a RL agent: `rl_train.py`, `rl_test.py`, and `plot.py`.
 
 - `rl_train.py`: This script trains a RL agent given a specific workload and cache size.  
 
