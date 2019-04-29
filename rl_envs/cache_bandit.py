@@ -40,7 +40,7 @@ class CacheBandit(gym.Env):
 
     self._fill_until_evict()
 
-
+  # TODO: What if the state vector only contains LBA and frequency, but ordered in recency
   def _compute_state(self):
     recency = []
     frequency = []
