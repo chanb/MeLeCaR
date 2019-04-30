@@ -10,7 +10,7 @@ We have used `casa-09`, `casa-12`, `cheetah-12` and `cheetah-16` as our training
 
 ### **Data Generation**
 
-We use the ipython notebook "Generate Data.ipynb" to generate data. Put ".blkparse" file into root derectory, and after run the ipython notebook, you will get ".pkl" files. We will use these ".pkl" files to train or test our model.
+We use the ipython notebook `Generate Data.ipynb` to generate data. Put `.blkparse` file into root derectory, and after run the ipython notebook, you will get `.pkl` files. We will use these `.pkl` files to train or test our model.
 
 ### **Models**
 
@@ -18,11 +18,11 @@ The models are stored in `models`. We currently use GRU as our default architect
 
 ### **Evaluation**
 
-We use the ipython notebook "Evaluation.ipynb" to evaluate our OPT, LFU and LRU cache replacement policies. We use "predict.py" to evaluate our trained models.
+We use the ipython notebook `Evaluation.ipynb` to evaluate our OPT, LFU and LRU cache replacement policies. We use `predict.py` to evaluate our trained models.
 
 ### **Visualization**
 
-We use the ipython notebook "Chart for Supervised Learning.ipynb" to plot our experiment results. Results are stored in the "result.xlsx" excel file.
+We use the ipython notebook `Chart for Supervised Learning.ipynb` to plot our experiment results. Results are stored in the `result.xlsx` excel file.
 
 
 ### **Scripts**
