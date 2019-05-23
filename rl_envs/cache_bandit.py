@@ -78,6 +78,8 @@ class CacheBandit(gym.Env):
     return final_state
 
 
+  # TODO: What if we change the reward to be -1 instead of 0 when we have immediate eviction?
+  # TODO: What if we normalize the reward?
   # Find the next time where we need to perform an eviction
   def _fill_until_evict(self):
     while self._counter < self._size:
